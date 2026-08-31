@@ -7,149 +7,182 @@
 <meta name="description" content="Two production systems built solo: a cross-venue arbitrage platform and an equity valuation platform. Anonymized engineering case studies.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/site.css">
 </head>
 <body>
 
-<nav class="sitebar">
-  <a class="home" href="./" aria-current="page">Maros Geffert</a>
-  <span class="sep">/</span>
-  <a href="buco-arbitrage/">Arbitrage platform</a>
-  <a href="buco-stock/">Valuation platform</a>
-</nav>
+<header class="sitebar">
+  <div class="inner">
+    <a class="brand" href="./">Maros Geffert</a>
+    <nav>
+      <a href="#projects">Projects</a>
+      <a href="#how">How I work</a>
+      <a href="#stack">Stack</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
+</header>
 
-<div class="wrap">
+<main class="wrap">
 
-  <header class="mast">
-    <div class="kicker">
-      <span>Engineering portfolio</span><span>/</span>
-      <span>Backend, distributed systems, infrastructure</span>
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="kicker">
+        <span>Backend</span><span class="sep">·</span>
+        <span>Distributed systems</span><span class="sep">·</span>
+        <span>Infrastructure</span>
+      </div>
+      <h1>I build systems that stay correct when something fails at 2am.</h1>
+      <p class="lede">
+        Two production systems, both solo work, both moving real money. Below is what they are,
+        how they are built, and what broke along the way.
+      </p>
+      <div class="hero-links">
+        <a href="https://github.com/Geffikk">github.com/Geffikk</a>
+        <span class="dot">·</span>
+        <span class="plain">Open to backend and platform roles</span>
+      </div>
     </div>
-    <h1>Systems that have to be <em>right</em> at 2am</h1>
-    <p class="standfirst">
-      I build and run production systems where being wrong costs real money. Two of them are
-      documented here: a real-time cross-venue arbitrage platform and an equity valuation
-      platform. Both are solo work, both are live, and both are described the way I would
-      describe them in an interview, including what broke.
-    </p>
-  </header>
 
-  <dl class="specs">
-    <div class="spec"><dt>Production systems</dt><dd>2</dd></div>
-    <div class="spec"><dt>Containers running</dt><dd>35 <small>27 + 8</small></dd></div>
-    <div class="spec"><dt>Automated tests</dt><dd>~5,300</dd></div>
-    <div class="spec"><dt>Languages in daily use</dt><dd>4 <small>Py / Go / TS / Lua</small></dd></div>
-    <div class="spec"><dt>Deploy model</dt><dd>GitOps <small>push to main</small></dd></div>
-  </dl>
+    <div class="datacard">
+      <div class="head">At a glance</div>
+      <dl>
+        <div class="row"><dt>In production</dt><dd>2 systems</dd></div>
+        <div class="row"><dt>Containers running</dt><dd>35</dd></div>
+        <div class="row"><dt>Automated tests</dt><dd>~5,300</dd></div>
+        <div class="row"><dt>Daily languages</dt><dd>Python · Go · TS · Lua</dd></div>
+        <div class="row"><dt>Deploy model</dt><dd>GitOps, push to main</dd></div>
+        <div class="row"><dt>Ops</dt><dd>Self-hosted, alerting on absence</dd></div>
+      </dl>
+    </div>
+  </section>
 
-  <section>
-    <div class="eyebrow">Case studies</div>
-    <h2>Two systems, written up honestly</h2>
+  <section class="sec" id="projects">
+    <div class="sechead">
+      <div class="eyebrow">Case studies</div>
+      <h2>Two systems, written up the way I would explain them in an interview</h2>
+    </div>
 
     <div class="projects">
-      <a class="projectcard" href="buco-arbitrage/">
+      <a class="card" href="buco-arbitrage/">
         <span class="ptag">Real-time trading infrastructure</span>
-        <h2>Cross-venue arbitrage platform</h2>
+        <h3>Cross-venue arbitrage platform</h3>
         <p>
-          Ingests live prices from sportsbooks and an on-chain prediction-market exchange, pairs
-          the same fixture across venues, and places both legs automatically under code-enforced
-          risk limits. The hard part is that the two legs live on two systems with no shared
-          transaction and no rollback.
+          Detects a priced edge across two venues and places both legs automatically, with real
+          money, under code-enforced risk limits.
         </p>
-        <div class="facts">
-          <span class="chip">Python</span><span class="chip">Go</span><span class="chip">Lua in Redis</span>
-          <span class="chip">Redis Streams</span><span class="chip">27 containers</span>
+        <ul class="bullets">
+          <li>Two legs on two systems with no shared transaction and no rollback</li>
+          <li>One Lua script inside Redis is the only writer of execution state</li>
+          <li>Fencing tokens, idempotent triggers and a frozen replay corpus</li>
+        </ul>
+        <div class="chips">
+          <span class="chip">Python</span><span class="chip">Go</span>
+          <span class="chip">Lua in Redis</span><span class="chip">Redis Streams</span>
+          <span class="chip">MongoDB</span><span class="chip">27 containers</span>
           <span class="chip hot">live money</span>
         </div>
-        <span class="more">Read the case study &rarr;</span>
+        <span class="more">Read the case study &nbsp;&rarr;</span>
       </a>
 
-      <a class="projectcard" href="buco-stock/">
+      <a class="card" href="buco-stock/">
         <span class="ptag">Financial data and analysis</span>
-        <h2>Equity valuation platform</h2>
+        <h3>Equity valuation platform</h3>
         <p>
-          Turns regulatory filings into auditable company valuations, tracks a real brokerage
-          portfolio against them, and uses language models only where a language model is allowed
-          to be wrong. Every stored valuation can be replayed a year later and proven unchanged.
+          Turns regulatory filings into auditable valuations and tracks a real portfolio against
+          them. Language models never supply a number.
         </p>
-        <div class="facts">
-          <span class="chip">Python / Flask</span><span class="chip">Next.js</span>
-          <span class="chip">MongoDB queues</span><span class="chip">Playwright / CDP</span>
-          <span class="chip">2,568 tests</span><span class="chip hot">no order path</span>
+        <ul class="bullets">
+          <li>Every stored valuation replays a year later and proves unchanged</li>
+          <li>Mongo job queues with leases, so a dead worker never loses a job</li>
+          <li>LLM research admitted only on verified citations, refusals kept</li>
+        </ul>
+        <div class="chips">
+          <span class="chip">Python</span><span class="chip">Flask</span>
+          <span class="chip">Next.js</span><span class="chip">MongoDB queues</span>
+          <span class="chip">Playwright / CDP</span><span class="chip">2,568 tests</span>
+          <span class="chip hot">no order path</span>
         </div>
-        <span class="more">Read the case study &rarr;</span>
+        <span class="more">Read the case study &nbsp;&rarr;</span>
       </a>
     </div>
   </section>
 
-  <section>
-    <div class="eyebrow">How I work</div>
-    <h2>Four habits both systems share</h2>
+  <section class="sec" id="how">
+    <div class="sechead">
+      <div class="eyebrow">How I work</div>
+      <h2>Four habits both systems taught me</h2>
+    </div>
 
-    <div class="limits">
-      <div class="limit">
+    <div class="rails">
+      <div class="rail">
         <h3>Measure before optimising</h3>
-        <p>A stage-latency waterfall showed internal coordination was under 30ms and the venue round-trip was everything, which killed a planned code optimisation. A profile showed 2.57 of 2.70 seconds was 42 sequential upstream calls, which produced a real one.</p>
+        <p>A latency waterfall killed one planned optimisation and a profile produced a real one: 2.70s down to 0.19s.</p>
       </div>
-      <div class="limit">
+      <div class="rail">
         <h3>Absence is a first-class alert</h3>
-        <p>My worst incidents were silences, not crashes: production dead for nine days with every alert green, a pipeline producing zero jobs for 33 days with nothing red. Both systems now alert on things not happening, and one sends a daily heartbeat so silence itself can be trusted.</p>
+        <p>My worst incidents were silences, not crashes. Nine days of dead production with every alert green.</p>
       </div>
-      <div class="limit">
+      <div class="rail">
         <h3>Refusing beats guessing</h3>
-        <p>Stale prices, unreachable venues, unknown outcomes and data too poor to value all stop the work with a named reason. A refused result is stored, shown and counted, because a scoreboard showing only what passed is the same error as an investment record that keeps the winners.</p>
+        <p>Stale prices, unreachable venues and data too poor to value all stop the work with a named reason.</p>
       </div>
-      <div class="limit">
-        <h3>Every number comes from a measurement</h3>
-        <p>One system derives all money from measured fills, never from the plan, after learning that the difference reported profitable trades as losses. The other hashes the exact inputs behind every valuation so a stored number can be replayed and proven.</p>
+      <div class="rail">
+        <h3>Every number is a measurement</h3>
+        <p>Money comes from measured fills, never the plan. Valuations hash their inputs so they can be replayed.</p>
       </div>
     </div>
   </section>
 
-  <section>
-    <div class="eyebrow">Stack</div>
-    <h2>What I actually reach for</h2>
+  <section class="sec" id="stack">
+    <div class="sechead">
+      <div class="eyebrow">Stack</div>
+      <h2>What I actually reach for</h2>
+    </div>
 
-    <div class="stackgrid">
-      <div class="stackgroup">
-        <h3>Languages</h3>
+    <div class="stacktable">
+      <div class="stackrow">
+        <span class="lab">Languages</span>
         <div class="chips">
-          <span class="chip hot">Python</span><span class="chip hot">TypeScript</span>
-          <span class="chip hot">Go</span><span class="chip">Lua</span><span class="chip">PHP</span>
+          <span class="chip">Python</span><span class="chip">TypeScript</span>
+          <span class="chip">Go</span><span class="chip">Lua</span><span class="chip">PHP</span>
         </div>
       </div>
-      <div class="stackgroup">
-        <h3>Backend</h3>
+      <div class="stackrow">
+        <span class="lab">Backend</span>
         <div class="chips">
-          <span class="chip">FastAPI</span><span class="chip">Flask</span><span class="chip">Laravel</span>
-          <span class="chip">Pydantic</span><span class="chip">Playwright / CDP</span>
+          <span class="chip">FastAPI</span><span class="chip">Flask</span>
+          <span class="chip">Laravel</span><span class="chip">Pydantic</span>
+          <span class="chip">Playwright / CDP</span>
         </div>
       </div>
-      <div class="stackgroup">
-        <h3>Frontend</h3>
+      <div class="stackrow">
+        <span class="lab">Frontend</span>
         <div class="chips">
           <span class="chip">Next.js</span><span class="chip">React</span>
-          <span class="chip">Tailwind</span><span class="chip">shadcn / Radix</span><span class="chip">Recharts</span>
+          <span class="chip">Tailwind</span><span class="chip">shadcn / Radix</span>
+          <span class="chip">Recharts</span>
         </div>
       </div>
-      <div class="stackgroup">
-        <h3>Data</h3>
+      <div class="stackrow">
+        <span class="lab">Data</span>
         <div class="chips">
           <span class="chip">Redis</span><span class="chip">Redis Streams</span>
           <span class="chip">MongoDB</span><span class="chip">MySQL / PostgreSQL</span>
         </div>
       </div>
-      <div class="stackgroup">
-        <h3>Infrastructure</h3>
+      <div class="stackrow">
+        <span class="lab">Infrastructure</span>
         <div class="chips">
           <span class="chip">Docker</span><span class="chip">Podman</span>
-          <span class="chip">Portainer GitOps</span><span class="chip">Cloudflare Tunnel / Access</span>
-          <span class="chip">WireGuard</span><span class="chip">Caddy</span><span class="chip">GitHub Actions</span>
+          <span class="chip">Portainer GitOps</span><span class="chip">Cloudflare Tunnel</span>
+          <span class="chip">WireGuard</span><span class="chip">Caddy</span>
+          <span class="chip">GitHub Actions</span>
         </div>
       </div>
-      <div class="stackgroup">
-        <h3>Operations</h3>
+      <div class="stackrow">
+        <span class="lab">Operations</span>
         <div class="chips">
           <span class="chip">Self-hosted metrics</span><span class="chip">Log aggregation</span>
           <span class="chip">Sentry-compatible errors</span><span class="chip">Healthchecks</span>
@@ -158,28 +191,33 @@
     </div>
   </section>
 
-  <section>
-    <div class="eyebrow">Contact</div>
-    <h2>Getting in touch</h2>
-    <p>
-      <a href="mailto:maros.geffert@gmail.com">maros.geffert@gmail.com</a>
-      &middot;
-      <a href="https://github.com/Geffikk">github.com/Geffikk</a>
-    </p>
-    <p class="note">
-      Both case studies are anonymized public documentation. Credentials, API keys, broker and
-      venue account data, real positions, strategy parameters and private endpoints are
-      deliberately excluded. The source repositories are private.
-    </p>
+  <section class="sec" id="contact">
+    <div class="contact">
+      <div class="copy">
+        <div class="eyebrow">Contact</div>
+        <h2>Open to backend and platform roles</h2>
+        <p class="sub">
+          Both case studies are anonymized. No credentials, positions, strategy parameters or
+          private endpoints.
+        </p>
+      </div>
+      <div class="btnrow">
+        <a class="btn" href="https://github.com/Geffikk">github.com/Geffikk</a>
+        <!-- Fill these in and remove the comment markers:
+        <a class="btn" href="mailto:you@example.com">Email</a>
+        <a class="btn" href="https://www.linkedin.com/in/...">LinkedIn</a>
+        -->
+      </div>
+    </div>
   </section>
 
   <div class="footer">
-    <span>Built as static HTML, served by GitHub Pages</span>
+    <span>Static HTML on GitHub Pages, no framework and no build step</span>
     <a href="buco-arbitrage/">Arbitrage platform</a>
     <a href="buco-stock/">Valuation platform</a>
   </div>
 
-</div>
+</main>
 
 </body>
 </html>
