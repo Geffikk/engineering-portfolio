@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="assets/site.css?v=5">
-<script src="assets/theme.js?v=5"></script>
+<link rel="stylesheet" href="assets/site.css?v=6">
+<script src="assets/theme.js?v=6"></script>
 </head>
 <body>
 
@@ -19,7 +19,6 @@
     <div class="right">
       <nav>
         <a href="#projects">Projects</a>
-        <a href="#how">How I work</a>
         <a href="#stack">Stack</a>
         <a href="#contact">Contact</a>
       </nav>
@@ -150,91 +149,74 @@
     </div>
   </section>
 
-  <section class="sec" id="how">
-    <div class="sechead">
-      <div class="eyebrow">How I work</div>
-      <h2>What running my own systems taught me</h2>
-      <p class="intro">
-        Nobody hands me a runbook, an on-call rota or someone else's post-mortem. These four
-        habits came out of incidents I had to diagnose and fix myself.
-      </p>
-    </div>
-
-    <div class="rails">
-      <div class="rail">
-        <h3>Measure before optimising</h3>
-        <p>A latency waterfall killed one planned optimisation and a profile produced a real one: 2.70s down to 0.19s.</p>
-      </div>
-      <div class="rail">
-        <h3>Absence is a first-class alert</h3>
-        <p>My worst incidents were silences, not crashes. Nine days of dead production with every alert green.</p>
-      </div>
-      <div class="rail">
-        <h3>Refusing beats guessing</h3>
-        <p>Stale prices, unreachable venues and data too poor to value all stop the work with a named reason.</p>
-      </div>
-      <div class="rail">
-        <h3>Every number is a measurement</h3>
-        <p>Money comes from measured fills, never the plan. Valuations hash their inputs so they can be replayed.</p>
-      </div>
-    </div>
-  </section>
-
   <section class="sec" id="stack">
     <div class="sechead">
       <div class="eyebrow">Stack</div>
       <h2>What I actually reach for</h2>
       <p class="intro">
-        Chosen per problem, not per preference. Go sits on the hot paths, Python everywhere the
-        logic changes weekly, and Lua only where a multi-key operation has to be atomic.
+        Chosen per problem, not per preference. Python carries the logic that changes weekly,
+        TypeScript everything a person looks at, and Lua only where a multi-key operation has to
+        be atomic.
       </p>
     </div>
 
     <div class="stacktable">
       <div class="stackrow">
         <span class="lab">Languages</span>
-        <div class="chips">
-          <span class="chip">Python</span><span class="chip">TypeScript</span>
-          <span class="chip">Go</span><span class="chip">Lua</span><span class="chip">PHP</span>
+        <div class="techs">
+          <div class="tech"><b>Python</b><span>Services, scrapers, models and tooling. My default.</span></div>
+          <div class="tech"><b>TypeScript</b><span>Operator dashboards and every browser-facing surface.</span></div>
+          <div class="tech"><b>Lua</b><span>Runs inside Redis, where a multi-key operation has to be atomic.</span></div>
         </div>
       </div>
       <div class="stackrow">
         <span class="lab">Backend</span>
-        <div class="chips">
-          <span class="chip">FastAPI</span><span class="chip">Flask</span>
-          <span class="chip">Laravel</span><span class="chip">Pydantic</span>
-          <span class="chip">Playwright / CDP</span>
+        <div class="techs">
+          <div class="tech"><b>FastAPI</b><span>Internal control APIs and health endpoints.</span></div>
+          <div class="tech"><b>Flask</b><span>The valuation platform's API, served behind gunicorn.</span></div>
+          <div class="tech"><b>Pydantic</b><span>Typed models and strict validation at every boundary.</span></div>
+          <div class="tech"><b>Playwright / CDP</b><span>Drives real browsers where a venue has no API.</span></div>
         </div>
       </div>
       <div class="stackrow">
         <span class="lab">Frontend</span>
-        <div class="chips">
-          <span class="chip">Next.js</span><span class="chip">React</span>
-          <span class="chip">Tailwind</span><span class="chip">shadcn / Radix</span>
-          <span class="chip">Recharts</span>
+        <div class="techs">
+          <div class="tech"><b>Next.js</b><span>App Router, server rendering and a proxy layer to the backend.</span></div>
+          <div class="tech"><b>React</b><span>Component model behind the operator screens.</span></div>
+          <div class="tech"><b>Tailwind</b><span>Utility styling, kept on design tokens rather than ad-hoc values.</span></div>
+          <div class="tech"><b>shadcn / Radix</b><span>Accessible primitives instead of hand-rolled dialogs and menus.</span></div>
+          <div class="tech"><b>Recharts</b><span>Price, latency and settlement charts.</span></div>
         </div>
       </div>
       <div class="stackrow">
         <span class="lab">Data</span>
-        <div class="chips">
-          <span class="chip">Redis</span><span class="chip">Redis Streams</span>
-          <span class="chip">MongoDB</span><span class="chip">MySQL / PostgreSQL</span>
+        <div class="techs">
+          <div class="tech"><b>Redis</b><span>Live state, and the single authority for money-bearing execution.</span></div>
+          <div class="tech"><b>Redis Streams</b><span>Restart-safe pipelines with consumer groups.</span></div>
+          <div class="tech"><b>MongoDB</b><span>Durable history, fixture mapping, audit trail and job queues.</span></div>
+          <div class="tech"><b>MySQL / PostgreSQL</b><span>Relational schemas where the data is genuinely relational.</span></div>
         </div>
       </div>
       <div class="stackrow">
         <span class="lab">Infrastructure</span>
-        <div class="chips">
-          <span class="chip">Docker</span><span class="chip">Podman</span>
-          <span class="chip">Portainer GitOps</span><span class="chip">Cloudflare Tunnel</span>
-          <span class="chip">WireGuard</span><span class="chip">Caddy</span>
-          <span class="chip">GitHub Actions</span>
+        <div class="techs">
+          <div class="tech"><b>Docker</b><span>Every service ships as a container, built from one compose file.</span></div>
+          <div class="tech"><b>Podman</b><span>Rootless containers on the production host.</span></div>
+          <div class="tech"><b>Portainer GitOps</b><span>Polls the repository and redeploys. A push is the deploy.</span></div>
+          <div class="tech"><b>Cloudflare Tunnel</b><span>The only public ingress, outbound-only, no open ports.</span></div>
+          <div class="tech"><b>Cloudflare Access</b><span>Identity allowlist in front of the one public surface.</span></div>
+          <div class="tech"><b>WireGuard</b><span>VPN-only access to every internal admin tool.</span></div>
+          <div class="tech"><b>Caddy</b><span>Reverse proxy with automatic certificates on private addresses.</span></div>
+          <div class="tech"><b>GitHub Actions</b><span>CI gates and scheduled audits, including a self-hosted runner.</span></div>
         </div>
       </div>
       <div class="stackrow">
         <span class="lab">Operations</span>
-        <div class="chips">
-          <span class="chip">Self-hosted metrics</span><span class="chip">Log aggregation</span>
-          <span class="chip">Sentry-compatible errors</span><span class="chip">Healthchecks</span>
+        <div class="techs">
+          <div class="tech"><b>Self-hosted metrics</b><span>Host and per-container stats with threshold alerting.</span></div>
+          <div class="tech"><b>Log aggregation</b><span>Live logs for every container in one place, no SSH needed.</span></div>
+          <div class="tech"><b>Error tracking</b><span>Self-hosted and Sentry-compatible, fed by the Sentry SDK.</span></div>
+          <div class="tech"><b>Healthchecks</b><span>Liveness plus data freshness, so a green container that processes nothing still fails.</span></div>
         </div>
       </div>
     </div>
