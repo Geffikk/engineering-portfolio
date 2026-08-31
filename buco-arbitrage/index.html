@@ -9,17 +9,29 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/theme.js"></script>
 </head>
 <body>
 
 <header class="sitebar">
   <div class="inner">
     <a class="brand" href="../">Maros Geffert</a>
-    <nav>
-      <a href="../buco-arbitrage/" aria-current="page">Arbitrage platform</a>
-      <a href="../buco-stock/">Valuation platform</a>
-      <a href="../">All projects</a>
-    </nav>
+    <div class="right">
+      <nav>
+        <a href="../buco-arbitrage/" aria-current="page">Arbitrage platform</a>
+        <a href="../buco-stock/">Valuation platform</a>
+        <a href="../">All projects</a>
+      </nav>
+      <button class="themetoggle" type="button" data-theme-toggle aria-label="Switch theme">
+        <svg class="tl-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.2"/>
+          <path d="M12 2.6v2.2M12 19.2v2.2M4.2 12H2M22 12h-2.2M6.1 6.1 4.6 4.6M19.4 19.4l-1.5-1.5M17.9 6.1l1.5-1.5M4.6 19.4l1.5-1.5"/>
+        </svg>
+        <svg class="tl-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none">
+          <path d="M20.5 14.3A8.5 8.5 0 0 1 9.7 3.5a8.5 8.5 0 1 0 10.8 10.8z"/>
+        </svg>
+      </button>
+    </div>
   </div>
 </header>
 

@@ -4,23 +4,35 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Maros Geffert - Engineering Portfolio</title>
-<meta name="description" content="Two production systems built solo: a cross-venue arbitrage platform and an equity valuation platform. Anonymized engineering case studies.">
+<meta name="description" content="Backend and platform engineer. Production systems designed, built and operated end to end, alone: real-time trading infrastructure and an auditable equity valuation platform.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/site.css">
+<script src="assets/theme.js"></script>
 </head>
 <body>
 
 <header class="sitebar">
   <div class="inner">
     <a class="brand" href="./">Maros Geffert</a>
-    <nav>
-      <a href="#projects">Projects</a>
-      <a href="#how">How I work</a>
-      <a href="#stack">Stack</a>
-      <a href="#contact">Contact</a>
-    </nav>
+    <div class="right">
+      <nav>
+        <a href="#projects">Projects</a>
+        <a href="#how">How I work</a>
+        <a href="#stack">Stack</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <button class="themetoggle" type="button" data-theme-toggle aria-label="Switch theme">
+        <svg class="tl-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.2"/>
+          <path d="M12 2.6v2.2M12 19.2v2.2M4.2 12H2M22 12h-2.2M6.1 6.1 4.6 4.6M19.4 19.4l-1.5-1.5M17.9 6.1l1.5-1.5M4.6 19.4l1.5-1.5"/>
+        </svg>
+        <svg class="tl-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none">
+          <path d="M20.5 14.3A8.5 8.5 0 0 1 9.7 3.5a8.5 8.5 0 1 0 10.8 10.8z"/>
+        </svg>
+      </button>
+    </div>
   </div>
 </header>
 
@@ -35,8 +47,9 @@
       </div>
       <h1>I build systems that stay correct when something fails at 2am.</h1>
       <p class="lede">
-        Two production systems, both solo work, both moving real money. Below is what they are,
-        how they are built, and what broke along the way.
+        Everything on this page I designed, built and operate myself, from the schema and the
+        failure handling to the containers, the deploy pipeline and the alerting. Two of these
+        systems run in production and move real money.
       </p>
       <div class="hero-links">
         <a href="mailto:maros.geffert@gmail.com">maros.geffert@gmail.com</a>
@@ -50,7 +63,7 @@
     <div class="datacard">
       <div class="head">At a glance</div>
       <dl>
-        <div class="row"><dt>In production</dt><dd>2 systems</dd></div>
+        <div class="row"><dt>Systems in production</dt><dd>2</dd></div>
         <div class="row"><dt>Containers running</dt><dd>35</dd></div>
         <div class="row"><dt>Automated tests</dt><dd>~5,300</dd></div>
         <div class="row"><dt>Daily languages</dt><dd>Python · Go · TS · Lua</dd></div>
@@ -62,8 +75,13 @@
 
   <section class="sec" id="projects">
     <div class="sechead">
-      <div class="eyebrow">Case studies</div>
-      <h2>Two systems, written up the way I would explain them in an interview</h2>
+      <div class="eyebrow">Projects</div>
+      <h2>My projects</h2>
+      <p class="intro">
+        Every one of these I specified, designed, implemented and now run alone. The two with a
+        write-up are documented the way I would walk a team through them: the architecture, the
+        hardest problem, and what broke on the way there.
+      </p>
     </div>
 
     <div class="projects">
@@ -108,13 +126,37 @@
         </div>
         <span class="more">Read the case study &nbsp;&rarr;</span>
       </a>
+
+      <div class="card soon">
+        <span class="ptag">Data pipeline and optimisation</span>
+        <h3>Betslip optimiser</h3>
+        <p>
+          A recommendation-only pipeline that ingests markets from several bookmakers and selects
+          a daily portfolio under explicit risk and budget constraints. It advises, it never acts.
+        </p>
+        <ul class="bullets">
+          <li>Strict cross-source matching, because a wrong pairing is worse than no pairing</li>
+          <li>Whole-portfolio search rather than picking each candidate greedily</li>
+          <li>Readiness diagnostics that say why a day produced no recommendation</li>
+        </ul>
+        <div class="chips">
+          <span class="chip">Python</span><span class="chip">TypeScript</span>
+          <span class="chip">React</span><span class="chip">Docker Compose</span>
+          <span class="chip">118 test modules</span>
+        </div>
+        <span class="more pending">Write-up in progress</span>
+      </div>
     </div>
   </section>
 
   <section class="sec" id="how">
     <div class="sechead">
       <div class="eyebrow">How I work</div>
-      <h2>Four habits both systems taught me</h2>
+      <h2>What running my own systems taught me</h2>
+      <p class="intro">
+        Nobody hands me a runbook, an on-call rota or someone else's post-mortem. These four
+        habits came out of incidents I had to diagnose and fix myself.
+      </p>
     </div>
 
     <div class="rails">
@@ -141,6 +183,10 @@
     <div class="sechead">
       <div class="eyebrow">Stack</div>
       <h2>What I actually reach for</h2>
+      <p class="intro">
+        Chosen per problem, not per preference. Go sits on the hot paths, Python everywhere the
+        logic changes weekly, and Lua only where a multi-key operation has to be atomic.
+      </p>
     </div>
 
     <div class="stacktable">
@@ -199,7 +245,8 @@
         <div class="eyebrow">Contact</div>
         <h2>Open to backend and platform roles</h2>
         <p class="sub">
-          Both case studies are anonymized. No credentials, positions, strategy parameters or
+          Happy to walk through any of these systems in detail, including the parts that went
+          wrong. Both write-ups are anonymized: no credentials, positions, strategy parameters or
           private endpoints.
         </p>
       </div>

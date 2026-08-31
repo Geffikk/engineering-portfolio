@@ -738,3 +738,53 @@ figcaption {
 
 /* the label belongs to the heading that follows it, not to the section gap */
 .wrap > section:not(.sec):not(.hero) > .eyebrow { margin-bottom: -13px; }
+
+/* ---------- theme toggle ---------- */
+
+.themetoggle {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-btn);
+  background: var(--surface-2);
+  color: var(--muted);
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease;
+}
+.themetoggle:hover { color: var(--ink); border-color: var(--hair-strong); }
+.themetoggle svg { width: 16px; height: 16px; display: block; }
+.themetoggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.sitebar .right {
+  display: flex;
+  align-items: center;
+  gap: 10px 24px;
+  flex-wrap: wrap;
+}
+
+/* ---------- project card without a write-up yet ---------- */
+
+.card.soon { cursor: default; }
+.card.soon:hover { border-color: var(--hair); transform: none; }
+.card .more.pending {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+/* ---------- section intro line ---------- */
+
+.sechead .intro {
+  font-size: 15.5px;
+  color: var(--muted);
+  max-width: 62ch;
+  margin-top: 2px;
+}
