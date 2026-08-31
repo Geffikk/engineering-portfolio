@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Two Legs, No Rollback - Cross-Venue Arbitrage Platform</title>
+<meta name="description" content="Engineering case study of a production cross-venue arbitrage platform: architecture, the hardest problem, risk limits and stack.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+
+<nav class="sitebar">
+  <a class="home" href="../">Maros Geffert</a>
+  <span class="sep">/</span>
+  <a href="../buco-arbitrage/" aria-current="page">Arbitrage platform</a>
+  <a href="../buco-stock/">Valuation platform</a>
+</nav>
+
+<div class="wrap">
+
+  <header class="mast">
+    <div class="kicker">
+      <span>Engineering case study</span><span>/</span>
+      <span>Personal project</span><span>/</span>
+      <span>Feb 2026 &ndash; present</span><span>/</span>
+      <b>Live in production</b>
+    </div>
+    <h1>Two legs, no <em>rollback</em></h1>
+    <p class="standfirst">
+      A real-time cross-venue arbitrage platform. The arithmetic is trivial. The engineering
+      is everything that happens when one leg fills, the other is rejected, and there is no
+      transaction to roll back.
+    </p>
+  </header>
+
+  <dl class="specs">
+    <div class="spec"><dt>Containers in prod</dt><dd>27</dd></div>
+    <div class="spec"><dt>Lines of code</dt><dd>~300k <small>Py / Go / TS / Lua</small></dd></div>
+    <div class="spec"><dt>Automated tests</dt><dd>~2,700</dd></div>
+    <div class="spec"><dt>Commits</dt><dd>~1,250 <small>mostly solo</small></dd></div>
+    <div class="spec"><dt>Execution authority</dt><dd>1 <small>Lua script</small></dd></div>
+  </dl>
+
+  <section>
+    <div class="eyebrow">What it does</div>
+    <h2>Same fixture, two venues, opposite outcomes</h2>
+    <p class="lede">
+      The system ingests live prices from sportsbooks and from an on-chain prediction-market
+      exchange, works out which listings refer to the same real-world fixture, prices the
+      two opposite outcomes, and places both legs automatically under hard, code-enforced
+      risk limits.
+    </p>
+
+    <div class="pipeline">
+      <div class="step">
+        <span class="n">INGEST</span>
+        <h3>Prices in</h3>
+        <p>WebSocket odds streams, exchange order-book deltas, and headless Chromium for venues with no API.</p>
+      </div>
+      <div class="step">
+        <span class="n">MAP</span>
+        <h3>Pair the fixture</h3>
+        <p>No shared identifiers, no shared naming. Deterministic fuzzy matching plus a curated alias library.</p>
+      </div>
+      <div class="step">
+        <span class="n">DETECT</span>
+        <h3>Price the edge</h3>
+        <p>Publish when the two opposite outcomes leave a margin above the floor, with a reason recorded when they do not.</p>
+      </div>
+      <div class="step">
+        <span class="n">ADMIT</span>
+        <h3>Score the worst case</h3>
+        <p>Revalidate on fresh prices, score after fees, FX, rounding and slippage, apply budgets and exposure caps.</p>
+      </div>
+      <div class="step">
+        <span class="n">EXECUTE</span>
+        <h3>Place both legs</h3>
+        <p>Browser plus captured authenticated request on one side, fill-or-kill CLOB orders on the other.</p>
+      </div>
+      <div class="step">
+        <span class="n">SETTLE</span>
+        <h3>Prove the outcome</h3>
+        <p>Named terminal state, measured fills only, per-row FX, and an explanation for every gap.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Architecture</div>
+    <h2>State ownership is the whole design</h2>
+
+    <figure class="figure">
+      <svg viewBox="0 0 900 372" role="img" aria-label="Architecture: ingestion services write to Market Redis, the detector feeds the coordinator, which owns Execution Redis as the single execution authority driving two executors.">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z"/>
+          </marker>
+        </defs>
+        <g>
+
+          <!-- column labels -->
+          <g class="collabels">
+            <text class="col" x="20" y="22">INGEST</text>
+            <text class="col" x="330" y="22">STATE</text>
+            <text class="col" x="650" y="22">TRADE</text>
+          </g>
+
+          <!-- ingest boxes -->
+          <g>
+            <rect x="20" y="38" width="200" height="42"/>
+            <text x="34" y="58">scrapers (Chromium)</text>
+            <text x="34" y="72" class="m">fixtures, catalog</text>
+
+            <rect x="20" y="94" width="200" height="42"/>
+            <text x="34" y="114">odds streamers (WS)</text>
+            <text x="34" y="128" class="m">live prices</text>
+
+            <rect x="20" y="150" width="200" height="56"/>
+            <text x="34" y="170">book ingest / transform</text>
+            <text x="34" y="184" class="m">Go, WS to Redis Streams</text>
+            <text x="34" y="198" class="m">consumer groups</text>
+          </g>
+
+          <!-- state -->
+          <rect x="290" y="38" width="230" height="78" class="mkt"/>
+          <text x="304" y="58" class="hb">MARKET REDIS</text>
+          <text x="304" y="76" class="m">rebuildable live state</text>
+          <text x="304" y="92" class="m">streams + pub/sub + Lua</text>
+          <text x="304" y="108" class="m">loss = re-ingest, no money</text>
+
+          <rect x="290" y="132" width="230" height="94" class="exe"/>
+          <text x="304" y="152" class="ha">EXECUTION REDIS</text>
+          <text x="304" y="170" class="m">durable, primary + replica</text>
+          <text x="304" y="186" class="m">single execution authority</text>
+          <text x="304" y="202" class="m">admission, fencing, exposure</text>
+          <text x="304" y="218" class="m">loss = money at risk</text>
+
+          <rect x="290" y="242" width="230" height="60"/>
+          <text x="304" y="262">MongoDB</text>
+          <text x="304" y="278" class="m">history, mapping, audit</text>
+          <text x="304" y="294" class="m">projection, never read to trade</text>
+
+          <!-- trade -->
+          <rect x="600" y="38" width="200" height="42"/>
+          <text x="614" y="58">fixture matcher</text>
+          <text x="614" y="72" class="m">fuzzy + alias library</text>
+
+          <rect x="600" y="94" width="200" height="42"/>
+          <text x="614" y="114">detector</text>
+          <text x="614" y="128" class="m">margin floor, reasons</text>
+
+          <rect x="600" y="150" width="200" height="56" class="coord"/>
+          <text x="614" y="170" class="ha">coordinator</text>
+          <text x="614" y="186" class="m">revalidate, size, score</text>
+          <text x="614" y="200" class="m">pure decision kernel</text>
+
+          <rect x="600" y="220" width="95" height="52"/>
+          <text x="612" y="240">leg A</text>
+          <text x="612" y="254" class="m">browser</text>
+          <text x="612" y="266" class="m">+ API</text>
+
+          <rect x="705" y="220" width="95" height="52"/>
+          <text x="717" y="240">leg B</text>
+          <text x="717" y="254" class="m">CLOB</text>
+          <text x="717" y="266" class="m">FOK / FAK</text>
+
+          <rect x="600" y="288" width="200" height="42"/>
+          <text x="614" y="308">dashboard</text>
+          <text x="614" y="322" class="m">operator control surface</text>
+
+          <!-- arrows -->
+          <g class="flow" marker-end="url(#ar)">
+            <path d="M220,59 L286,62"/>
+            <path d="M220,115 L286,86"/>
+            <path d="M220,178 L286,100"/>
+            <path d="M520,66 L596,59"/>
+            <path d="M520,80 L596,112"/>
+            <path d="M700,136 L700,146"/>
+            <path d="M596,178 L524,178"/>
+            <path d="M524,190 L596,190"/>
+            <path d="M647,206 L647,216"/>
+            <path d="M752,206 L752,216"/>
+            <path d="M520,272 L596,300"/>
+          </g>
+        </g>
+      </svg>
+      <figcaption>
+        Two Redis instances, on purpose. Flushing a cache of live odds is routine. Flushing
+        &ldquo;which bets are half-open right now&rdquo; is an incident. Separating them physically means
+        the routine operation can never become the incident.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="eyebrow">The hardest problem</div>
+    <h2>Two systems, no shared transaction</h2>
+    <p class="lede">
+      Leg A is a sportsbook with no trading API, reached through a browser session and a
+      captured authenticated request, latency measured in seconds. Leg B is an on-chain order
+      book with fill-or-kill semantics and a relayer. There is no two-phase commit between
+      them. If one fills and the other does not, the result is not a failed job. It is a naked
+      directional position with real money in it, at 2am, with nobody watching.
+    </p>
+
+    <div class="case">
+      <div class="panel broke">
+        <span class="tag">What the first design did</span>
+        <p>A coordinator held the job in memory, called both venues, wrote the result to MongoDB. It failed in every way a distributed system can:</p>
+        <ul>
+          <li><strong>Double submits.</strong> Check-then-act across a network is not atomic. A restart in the wrong 200&nbsp;ms window submitted the same bet twice.</li>
+          <li><strong>Lost commands.</strong> A hedge order was decided, recorded, and never emitted before the process died. The database said hedged. Reality said naked.</li>
+          <li><strong>Zombie writers.</strong> A hung executor woke up minutes later and wrote into a job that had already closed.</li>
+          <li><strong>Lying reports.</strong> PnL came from the plan, not the fill, so profitable trades were classified as losses.</li>
+        </ul>
+      </div>
+
+      <div class="panel built">
+        <span class="tag">What I built instead</span>
+        <ul>
+          <li><strong>One authority, inside the datastore.</strong> All execution state moved into a single ~2,500-line Lua script run server-side by Redis. Admission, budget checks, phase transitions and command emission are one atomic operation. A distributed race became a single-threaded one.</li>
+          <li><strong>Fencing tokens</strong> at fixture and resource level. A stale worker fails its write on a fence mismatch instead of corrupting a newer job.</li>
+          <li><strong>Emission as a recorded fact.</strong> &ldquo;Decided to emit&rdquo; and &ldquo;emitted&rdquo; are separate facts written together, with an audit asserting they agree.</li>
+          <li><strong>Pure decision functions</strong> with no clock, network or database, which made a <strong>frozen replay corpus</strong> possible: real end-to-end outcomes pinned down to phase, exposure, command lineage and economics.</li>
+        </ul>
+      </div>
+
+      <div class="panel changed">
+        <span class="tag">What actually changed</span>
+        <p>
+          Open exposure did not go to zero, because it cannot. A venue can always go down
+          mid-trade. What changed is that every occurrence became detected, classified,
+          bounded and explained.
+        </p>
+        <p>
+          A later cluster of five exposures was attributed to four venue outages and exactly
+          one bug of ours, fixed the same day. That attribution was impossible in the original
+          design, and it is the difference between running a system and hoping about one.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">The failures that taught the most</div>
+    <h2>Almost none of them were crashes</h2>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Failure</th><th>Why nothing caught it</th><th>What went into the system</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="wrapcell">Production dead for nine days</td>
+            <td>Alerting only reacted to things that <em>happen</em>. A cleanly stopped stack emits nothing at all.</td>
+            <td>A watchdog with a <strong>declared</strong> list of expected services, never a derived one, because a derived list is empty exactly when the stack is gone. Plus a daily heartbeat, so silence became a signal.</td>
+          </tr>
+          <tr>
+            <td class="wrapcell">One sport produced zero jobs for 33 days</td>
+            <td>Nothing was red. The pipeline was running, ingesting and matching. The failure was an absence in a count nobody counted.</td>
+            <td>Counts of expected work became health signals, and every declined opportunity now records a named rejection reason.</td>
+          </tr>
+          <tr>
+            <td class="wrapcell">Money numbers confidently wrong</td>
+            <td>Reporting derived from intent, not measurement: planned stake instead of measured fill, a partial fill read as no fill, a fee model using the wrong rate.</td>
+            <td>All money derives from measured fills or is labelled planned. A backfill recomputed history without overwriting a single original measurement; unexplained settlement fell from 41% to 1%.</td>
+          </tr>
+          <tr>
+            <td class="wrapcell">A schema cutover hid in-play fixtures</td>
+            <td>The new write primitive de-duplicated identical catalog re-sends, so unchanged metadata stopped refreshing its timestamp and fresh prices looked stale.</td>
+            <td>Separate freshness horizons for catalog and prices, and a strict per-key ownership contract with epochs and back-off.</td>
+          </tr>
+          <tr>
+            <td class="wrapcell">A risk policy that felt obviously right</td>
+            <td>Intuition. Closing out a half-open position for a small known loss sounds like prudence.</td>
+            <td>Backtesting across the full recorded history showed it was systematically value-destroying. Every risk knob now has to survive a backtest before it ships, and several plausible ones did not.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Risk and failure handling</div>
+    <h2>Limits live in code, not in an operator&rsquo;s memory</h2>
+
+    <div class="limits">
+      <div class="limit"><h3>Per-plan and per-fixture budgets</h3><p>One opportunity is capped, and so is total commitment to a single real-world event inside a rolling window.</p></div>
+      <div class="limit"><h3>Worst-case ROI floor</h3><p>After fees, FX, rounding and slippage. A plan must be profitable in its worst case, never merely its expected one.</p></div>
+      <div class="limit"><h3>Never a negative worst case</h3><p>Automatic execution may not knowingly accept a losing worst case. Hard zero.</p></div>
+      <div class="limit"><h3>Depth and staleness gates</h3><p>Top-of-book depth must honour the protected price, and every input has an age ceiling. Stale fails closed.</p></div>
+      <div class="limit"><h3>Pre-submit hedge guard</h3><p>Re-reads the hedge venue immediately before committing the first leg, and refuses if the hedge is no longer buyable.</p></div>
+      <div class="limit"><h3>Layered recovery</h3><p>Re-size, then rescue into a balanced pair, then deliberate flatten, then escalate to a named open-exposure state that blocks further automation.</p></div>
+      <div class="limit"><h3>Bounded retries</h3><p>Venue-driven backoff honouring retry-after hints, idempotent triggers, duplicate-result tolerance, and retry exhaustion as an explicit terminal state.</p></div>
+      <div class="limit"><h3>Per-venue kill switches</h3><p>Every venue has a master enable flag and a paper-or-live submission mode. Paper simulates both legs with zero exposure.</p></div>
+    </div>
+
+    <div class="rollout">rollout pattern for every new enforcement &nbsp;&rarr;&nbsp; off &nbsp;&rarr;&nbsp; shadow (measure what it would have done) &nbsp;&rarr;&nbsp; enforce</div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Delivery and operations</div>
+    <h2>Merging to main is the deployment</h2>
+    <p>
+      Portainer GitOps polls the repository and redeploys the stack. There is no manual deploy
+      script and no hand-edited file on the production host. One compose file is both the build
+      contract and the deployment source, so what CI builds is literally what runs. Secrets live
+      in the orchestrator, and the stack fails fast when one is missing, so a half-configured
+      deploy never starts. Rollback is a revert plus a redeploy.
+    </p>
+    <p>
+      Monitoring runs as its own stack, because a monitor that dies with the thing it monitors is
+      decoration: self-hosted metrics, live logs, Sentry-compatible error tracking, a notifier for
+      crashes and a watchdog for absence. Alerts carry suppression windows so a normal deploy does
+      not page anyone, recovery notices so an alert always ends, and a daily heartbeat.
+    </p>
+    <p>
+      The only public surface is the operator dashboard, behind an identity-allowlisted access
+      proxy and an outbound-only tunnel, with application OAuth inside it. Every internal admin
+      tool is reachable over VPN only.
+    </p>
+  </section>
+
+  <section>
+    <div class="eyebrow">Stack</div>
+    <h2>Chosen per hot path, not per preference</h2>
+
+    <div class="stackgrid">
+      <div class="stackgroup">
+        <h3>Languages</h3>
+        <div class="chips">
+          <span class="chip hot">Python 3</span><span class="chip hot">Go</span>
+          <span class="chip hot">TypeScript</span><span class="chip hot">Lua</span>
+        </div>
+      </div>
+      <div class="stackgroup">
+        <h3>Services</h3>
+        <div class="chips">
+          <span class="chip">FastAPI</span><span class="chip">Uvicorn</span>
+          <span class="chip">Playwright</span><span class="chip">Chromium / CDP</span>
+          <span class="chip">web3 / eth-account</span><span class="chip">RapidFuzz</span>
+        </div>
+      </div>
+      <div class="stackgroup">
+        <h3>Data</h3>
+        <div class="chips">
+          <span class="chip">Redis 7</span><span class="chip">Redis Streams</span>
+          <span class="chip">Consumer groups</span><span class="chip">Pub/Sub</span>
+          <span class="chip">Server-side Lua</span><span class="chip">MongoDB</span>
+        </div>
+      </div>
+      <div class="stackgroup">
+        <h3>Frontend</h3>
+        <div class="chips">
+          <span class="chip">Next.js 16</span><span class="chip">React 19</span>
+          <span class="chip">Tailwind 4</span><span class="chip">shadcn</span>
+          <span class="chip">Recharts</span><span class="chip">Auth.js</span>
+          <span class="chip">Vitest</span>
+        </div>
+      </div>
+      <div class="stackgroup">
+        <h3>Infrastructure</h3>
+        <div class="chips">
+          <span class="chip">Docker / Podman</span><span class="chip">Portainer GitOps</span>
+          <span class="chip">Cloudflare Tunnel</span><span class="chip">Cloudflare Access</span>
+          <span class="chip">Caddy</span><span class="chip">WireGuard</span>
+          <span class="chip">GitHub Actions</span>
+        </div>
+      </div>
+      <div class="stackgroup">
+        <h3>Observability</h3>
+        <div class="chips">
+          <span class="chip">Beszel</span><span class="chip">Dozzle</span>
+          <span class="chip">GlitchTip / Sentry SDK</span><span class="chip">Custom watchdog</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Quick answers</div>
+    <h2>The questions people actually ask</h2>
+
+    <div class="tablewrap">
+      <table>
+        <tbody>
+          <tr><td>Live or paper?</td><td>Live, with real money, under automated limits. Paper is a first-class per-venue mode, not an afterthought: one venue lane runs live, a second is fully implemented and deliberately still in paper pending its evidence review.</td></tr>
+          <tr><td>REST or WebSocket?</td><td>Both, by role. WebSocket for live prices (order-book deltas, both odds streams). REST for catalog, discovery, settlement and order placement. Chrome DevTools Protocol for venues with no API.</td></tr>
+          <tr><td>Redis: cache, Pub/Sub or Streams?</td><td>All three, deliberately separated. Streams with consumer groups for restart-safe pipelines, Pub/Sub for cheap fan-out that the next reconcile repairs, keyed live state guarded by Lua, and server-side Lua as the execution authority.</td></tr>
+          <tr><td>Database</td><td>MongoDB for durable history, mapping, audit and projections. Two separate Redis instances: rebuildable market state, and a durable replicated execution authority.</td></tr>
+          <tr><td>Scheduled work</td><td>Per-service internal loops from versioned config, a scheduler sidecar for stack sleep and wake windows, and CI cron for read-only production audits. No external cron on the trading hot path.</td></tr>
+          <tr><td>AI in the loop?</td><td>None. Fixture matching is deterministic fuzzy matching plus a curated alias library, because a trading decision has to be reproducible and auditable.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="note">
+      Anonymized portfolio documentation. Venue names, credentials, wallet addresses, hostnames,
+      threshold values and strategy parameters are deliberately omitted or generalized. No
+      secrets and no live financial data appear on this page.
+    </p>
+  </section>
+
+</div>
+
+<div class="wrap" style="padding-bottom:40px">
+  <div class="footer">
+    <span>Anonymized engineering documentation</span>
+    <a href="../">Back to portfolio</a>
+    <a href="../buco-stock/">Valuation platform</a>
+  </div>
+</div>
+
+</body>
+</html>

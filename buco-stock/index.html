@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Numbers That Survive a Year - Equity Valuation Platform</title>
+<meta name="description" content="Engineering case study of a self-hosted equity valuation and portfolio platform: deterministic valuations from filings, LLM research with citation verification, architecture and failure handling.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+
+<nav class="sitebar">
+  <a class="home" href="../">Maros Geffert</a>
+  <span class="sep">/</span>
+  <a href="../buco-arbitrage/">Arbitrage platform</a>
+  <a href="../buco-stock/" aria-current="page">Valuation platform</a>
+</nav>
+
+<div class="wrap">
+
+  <header class="mast">
+    <div class="kicker">
+      <span>Engineering case study</span><span>/</span>
+      <span>Solo project</span><span>/</span>
+      <span>2026 &ndash; present</span><span>/</span>
+      <b>Live in production</b>
+    </div>
+    <h1>Numbers that survive a <em>year</em></h1>
+    <p class="standfirst">
+      A self-hosted platform that turns regulatory filings into auditable company valuations,
+      tracks a real brokerage portfolio against them, and uses language models only where a
+      language model is actually allowed to be wrong.
+    </p>
+  </header>
+
+  <dl class="specs">
+    <div class="spec"><dt>Services in the stack</dt><dd>8</dd></div>
+    <div class="spec"><dt>Lines of code</dt><dd>~80k <small>44k Py / 36k TS</small></dd></div>
+    <div class="spec"><dt>Backend tests</dt><dd>2,568 <small>114 files</small></dd></div>
+    <div class="spec"><dt>Published host ports</dt><dd>0</dd></div>
+    <div class="spec"><dt>Order paths in the code</dt><dd>0 <small>by design</small></dd></div>
+  </dl>
+
+  <section>
+    <div class="eyebrow">What it does</div>
+    <h2>Three things, in the order the data flows</h2>
+
+    <div class="pipeline">
+      <div class="step">
+        <span class="n">VALUE</span>
+        <h3>Compute from primary sources</h3>
+        <p>Financial statements come from SEC EDGAR XBRL, not from a data vendor and not from a chatbot. Forward FCFF path, derived cost of capital, DCF, EPV and a reverse DCF, with scenarios and a sensitivity grid.</p>
+      </div>
+      <div class="step">
+        <span class="n">VERIFY</span>
+        <h3>Read the market&rsquo;s opinion, then check it</h3>
+        <p>Deep research reports come from commercial LLM research products. Every factual claim is then verified against the page it cited. A report whose citations do not hold up is stored and scored as refused, never quietly dropped.</p>
+      </div>
+      <div class="step">
+        <span class="n">TRACK</span>
+        <h3>Follow a real portfolio</h3>
+        <p>Positions and tax lots are imported read-only from a broker, reconstructed from transactions, and linked to the valuations, so a holding can be read against its own fair value band.</p>
+      </div>
+    </div>
+
+    <p class="lede">
+      The system never places a trade. That is a design decision, not a missing feature. The whole
+      point is a decision-support tool whose numbers can be defended, and an execution path would
+      be a second class of risk with none of the same guarantees.
+    </p>
+  </section>
+
+  <section>
+    <div class="eyebrow">Architecture</div>
+    <h2>One host, nothing exposed</h2>
+
+    <figure class="figure">
+      <svg viewBox="0 0 900 392" role="img" aria-label="Architecture: a Cloudflare edge dials an outbound tunnel into a single host running a Next.js web service, an internal Flask API, three workers and a signed-in Chrome container, with MongoDB and read-only external sources.">
+        <defs>
+          <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z"/>
+          </marker>
+        </defs>
+        <g>
+          <text class="col" x="20" y="22">EDGE</text>
+          <text class="col" x="310" y="22">SINGLE LINUX HOST</text>
+          <text class="col" x="640" y="22">DATA + READ-ONLY SOURCES</text>
+
+          <rect class="zone" x="296" y="34" width="290" height="340"/>
+
+          <rect x="20" y="46" width="210" height="50"/>
+          <text x="34" y="66">Cloudflare</text>
+          <text class="m" x="34" y="82">WAF geoblock + Zero Trust</text>
+
+          <rect class="coord" x="20" y="110" width="210" height="50"/>
+          <text class="ha" x="34" y="130">cloudflared</text>
+          <text class="m" x="34" y="146">outbound only, sole ingress</text>
+
+          <rect x="20" y="186" width="210" height="50"/>
+          <text x="34" y="206">host cron, 06:30 daily</text>
+          <text class="m" x="34" y="222">runs a worker module</text>
+
+          <rect x="310" y="50" width="262" height="46"/>
+          <text x="324" y="70">web</text>
+          <text class="m" x="324" y="86">Next.js 16 / React 19, SSR + BFF</text>
+
+          <rect class="exe" x="310" y="112" width="262" height="46"/>
+          <text class="ha" x="324" y="132">backend</text>
+          <text class="m" x="324" y="148">Flask 3.1 + gunicorn, internal only</text>
+
+          <rect x="310" y="176" width="262" height="38"/>
+          <text x="324" y="192">valuation-worker</text>
+          <text class="m" x="324" y="206">EDGAR + valuation engine</text>
+
+          <rect x="310" y="222" width="262" height="38"/>
+          <text x="324" y="238">research-worker (provider A)</text>
+          <text class="m" x="324" y="252">one process per source</text>
+
+          <rect x="310" y="268" width="262" height="38"/>
+          <text x="324" y="284">research-worker (provider B)</text>
+          <text class="m" x="324" y="298">one process per source</text>
+
+          <rect class="mkt" x="310" y="316" width="262" height="46"/>
+          <text class="hb" x="324" y="336">chrome</text>
+          <text class="m" x="324" y="352">headful, signed in once by a human</text>
+
+          <rect class="mkt" x="640" y="46" width="240" height="50"/>
+          <text class="hb" x="654" y="66">MongoDB</text>
+          <text class="m" x="654" y="82">documents + two job queues</text>
+
+          <rect x="640" y="110" width="240" height="50"/>
+          <text x="654" y="130">SEC EDGAR XBRL</text>
+          <text class="m" x="654" y="146">filings + daily index</text>
+
+          <rect x="640" y="174" width="240" height="40"/>
+          <text x="654" y="194">GLEIF LEI / OpenFIGI</text>
+          <text class="m" x="654" y="208">entity identity</text>
+
+          <rect x="640" y="228" width="240" height="40"/>
+          <text x="654" y="248">Prices, FX, risk-free rate</text>
+          <text class="m" x="654" y="262">market inputs</text>
+
+          <rect x="640" y="282" width="240" height="50"/>
+          <text x="654" y="302">Broker Flex report</text>
+          <text class="m" x="654" y="318">read-only token, no order path</text>
+
+          <g class="flow" marker-end="url(#ar2)">
+            <path d="M125,96 L125,106"/>
+            <path d="M230,135 L306,78"/>
+            <path d="M441,96 L441,108"/>
+            <path d="M572,130 L636,80"/>
+            <path d="M572,190 L636,86"/>
+            <path d="M572,196 L636,132"/>
+            <path d="M572,140 L636,192"/>
+            <path d="M572,146 L636,246"/>
+            <path d="M572,152 L636,300"/>
+            <path d="M230,205 L306,193"/>
+            <path class="dash" d="M441,260 L441,312"/>
+            <path class="dash" d="M470,306 L470,312"/>
+          </g>
+        </g>
+      </svg>
+      <figcaption>
+        Dashed lines are Chrome DevTools Protocol. No container publishes a port to the host: the
+        only inbound path is an outbound tunnel the edge dials back through, and the API is
+        reachable only on the compose network.
+      </figcaption>
+    </figure>
+
+    <div class="limits">
+      <div class="limit"><h3>Nothing is published</h3><p>The API is not reachable from the internet at all. Host administration is over WireGuard, the machine sits behind NAT, and the public hostname is a tunnel CNAME, so there is no origin IP to find.</p></div>
+      <div class="limit"><h3>The browser is a credential</h3><p>CDP has no authentication by design and can read every cookie in the profile, so the debug port is never published and the remote desktop is bound to loopback.</p></div>
+      <div class="limit"><h3>No CI runner, no registry</h3><p>The orchestrator polls the repository, builds the images on the target machine and recreates what changed. A deploy is a push, and the live commit is readable from the running container.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Async work</div>
+    <h2>A queue built on leases, not locks</h2>
+
+    <div class="pipeline">
+      <div class="step"><span class="n">1 &middot; ENQUEUE</span><h3>202, not a wait</h3><p>A run takes ten to twenty minutes, so it cannot live inside an HTTP request. The API inserts a QUEUED job and returns its id.</p></div>
+      <div class="step"><span class="n">2 &middot; CLAIM</span><h3>Atomic, no broker</h3><p>A worker claims with a single <code>findOneAndUpdate</code> and receives a lease deadline. No Redis, no Celery, no RabbitMQ.</p></div>
+      <div class="step"><span class="n">3 &middot; RENEW</span><h3>Prove you are alive</h3><p>A live worker renews the lease on every wait pass. Liveness is asserted continuously rather than assumed from a held lock.</p></div>
+      <div class="step"><span class="n">4 &middot; LAPSE</span><h3>Death is survivable</h3><p>A worker that dies lets its lease expire and the job returns to the queue with the attempt count raised. SIGTERM hands the job back immediately.</p></div>
+      <div class="step"><span class="n">5 &middot; SETTLE</span><h3>Two kinds of failure</h3><p>DONE with a result, FAILED with a reason, or ABANDONED after too many attempts. The last is a distinct state so a reader can tell &ldquo;broke once&rdquo; from &ldquo;keeps breaking&rdquo;.</p></div>
+    </div>
+
+    <p>
+      The queue is Mongo documents, deliberately. A job is a document that survives being
+      consumed, which is what makes &ldquo;why did that one fail three days ago&rdquo; answerable. A broker
+      would add a container, a connection, a failure mode and a second place the truth lives, to
+      buy throughput that a few dozen jobs a day will never need. The trade-off is written into
+      the code so the next person can reverse it on evidence rather than taste.
+    </p>
+  </section>
+
+  <section>
+    <div class="eyebrow">The hardest problem</div>
+    <h2>Making a number provable a year later</h2>
+    <p class="lede">
+      A valuation that cannot be reproduced is an opinion with a timestamp. The engineering
+      question is not &ldquo;is this number right&rdquo;, which nobody can answer, but &ldquo;is this the number
+      the stored inputs produce&rdquo;, which is decidable.
+    </p>
+
+    <div class="case">
+      <div class="panel broke">
+        <span class="tag">Where a hash lies</span>
+        <p>Hashing the inputs is the obvious move and it fails in three quiet ways:</p>
+        <ul>
+          <li><strong>Key order.</strong> The same document serialized twice can hash differently.</li>
+          <li><strong>Decimal spelling.</strong> A filer&rsquo;s trailing zero looks like a changed value.</li>
+          <li><strong>Binary floats.</strong> Converting one into a hashed payload is exactly where lost precision becomes invisible.</li>
+        </ul>
+      </div>
+
+      <div class="panel built">
+        <span class="tag">What I built</span>
+        <ul>
+          <li><strong>Canonicalisation</strong> that sorts keys at every depth, normalises <code>Decimal</code> spelling, and <strong>refuses</strong> a binary float in a hashed payload outright rather than converting it.</li>
+          <li><strong><code>Decimal</code> end to end</strong>, with no floats anywhere in a hashed path.</li>
+          <li><strong>A replay</strong> that recomputes a stored run from its stored inputs and compares field by field.</li>
+        </ul>
+      </div>
+
+      <div class="panel changed">
+        <span class="tag">Three possible answers</span>
+        <ul>
+          <li><strong>The hash no longer matches its payload.</strong> The record was altered after the fact.</li>
+          <li><strong>The value moved.</strong> The code changed, which is how an engine upgrade gets measured, and which must never happen silently.</li>
+          <li><strong>Nothing.</strong> Which is the answer that makes the number on the screen defensible.</li>
+        </ul>
+        <p>Being strict here is what lets everything downstream stay simple: no rounding rules, no tolerance windows, no &ldquo;close enough&rdquo; comparisons.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Other problems worth describing</div>
+    <h2>Four bugs that were not what they looked like</h2>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Symptom</th><th>What it actually was</th><th>The fix</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="wrapcell">Three research reports took three sequential runs</td>
+            <td>Threads looked like the answer, but a Playwright sync connection cannot be shared across threads. The browser was never the limit, the connection was.</td>
+            <td>One worker <strong>process</strong> per source, pinned so a worker never takes another source&rsquo;s job. Three sites run concurrently while the guarantee that mattered, at most one conversation per site, still holds.</td>
+          </tr>
+          <tr>
+            <td class="wrapcell">Reports scored 1 to 5 out of 12 on citation checks</td>
+            <td>The tempting fix was to lower the bar, which would have hidden the bug. The checker read five of a page&rsquo;s twenty sources, demanded both ends of a hedged range, refused the same figure written in millions instead of billions, and asked whether one three-sentence window carried a claim stating three separate facts.</td>
+            <td>Fix the checker, not the threshold. Same provider, same company, 11 of 12. The card now shows the divisor, so a reader can tell 12 of 12 from 5 of 12 without knowing a threshold exists.</td>
+          </tr>
+          <tr>
+            <td class="wrapcell">A company with two finished reports showed a dash and &ldquo;no verified number yet&rdquo;</td>
+            <td>One root cause in two places. The guard preventing cross-currency averaging compared raw strings, so <code>$80</code> and <code>USD 65</code> looked like two currencies. Separately the chart keyed points by exact timestamp although its own comment claimed same-day reports were averaged.</td>
+            <td>Normalise currency to an ISO code at extraction <strong>and at read time</strong>, so documents already stored were corrected with no migration, and group the chart by calendar day through the same functions that compute the card. Chart and card can no longer disagree.</td>
+          </tr>
+          <tr>
+            <td class="wrapcell">The whole analysis surface answered 403 for most of every week</td>
+            <td>The backend token lifetime and the web session lifetime had drifted six days apart. The cause was <code>${VAR:-default}</code> in the compose file with an explicit value set in the orchestrator&rsquo;s stack environment: the explicit value wins, silently, so changing the default in version control did nothing.</td>
+            <td>Both values are literals in the compose file, the web session length derives from the backend&rsquo;s, and the reason is a comment above the line. Non-secret configuration does not belong somewhere only one person can read.</td>
+          </tr>
+          <tr>
+            <td class="wrapcell">The listing page took 2.70s</td>
+            <td>2.57s of it was 42 sequential upstream price calls sitting inside the request path.</td>
+            <td>A stale-while-revalidate cache: 3s cold, 0.19s warm, including after the TTL expires, because the stale value is returned while the refresh runs behind it. An empty upstream response is never cached, because a slow reload beats showing &ldquo;no companies&rdquo; for fifteen minutes.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Failure handling</div>
+    <h2>Refusing is a first-class outcome</h2>
+    <p>
+      The system is a single host talking to sources that rate-limit, log out, move their
+      selectors and go down. Most of the engineering is in what happens then.
+    </p>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Failure</th><th>Behaviour</th></tr></thead>
+        <tbody>
+          <tr><td class="wrapcell">Worker dies mid-job</td><td>Lease expires, job returns to the queue with attempts + 1</td></tr>
+          <tr><td class="wrapcell">Worker receives SIGTERM</td><td>Job is handed back immediately, not left claimed</td></tr>
+          <tr><td class="wrapcell">Job fails repeatedly</td><td>Capped attempts, then <code>ABANDONED</code>, a distinct state from <code>FAILED</code></td></tr>
+          <tr><td class="wrapcell">Browser container missing</td><td>Job is deferred, not failed, up to a generous cap; past that it is a real outage someone must see</td></tr>
+          <tr><td class="wrapcell">Nightly sweep hits a bad entity</td><td>Recorded, the pass continues, non-zero exit code at the end</td></tr>
+          <tr><td class="wrapcell">Sweep and a manual run collide</td><td>Both take the same Mongo advisory lock with a TTL; the second reports &ldquo;already running&rdquo;</td></tr>
+          <tr><td class="wrapcell">Database briefly unreachable at boot</td><td>Index bootstrap is guarded, the app starts, the client is lazy</td></tr>
+          <tr><td class="wrapcell">Upstream returns empty</td><td>Never cached</td></tr>
+          <tr><td class="wrapcell">Blob archive growth</td><td>Content-addressed, refcounted, retention sweep, hard storage cap that refuses explicitly rather than growing without bound</td></tr>
+          <tr><td class="wrapcell">Missing encryption key</td><td>Endpoints that would persist a broker identifier refuse loudly instead of writing plaintext</td></tr>
+          <tr><td class="wrapcell">Data too poor to value</td><td>Explicit refusal with a stated reason, never an invented number</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      The last two are the theme. A tool whose job is to produce a number is most dangerous when
+      it produces one it should not have, so refusal has its own vocabulary and its own screens.
+    </p>
+  </section>
+
+  <section>
+    <div class="eyebrow">Security</div>
+    <h2>One session model, verified twice</h2>
+
+    <div class="limits">
+      <div class="limit"><h3>No published ports</h3><p>The sole ingress is an outbound Cloudflare Tunnel behind a WAF geoblock and Zero Trust Access. API, database and the browser debug port are unreachable from the internet.</p></div>
+      <div class="limit"><h3>Broker identifiers encrypted at rest</h3><p>Fernet, keyed from the environment. Because Fernet ciphertexts are salted and therefore useless as a lookup key, find-or-create uses a keyed HMAC-SHA256 of the same value.</p></div>
+      <div class="limit"><h3>Logs are scrubbed</h3><p>A redaction filter is installed on the root logger and the application logger, so an identifier or token cannot reach a log line even from code that never thought about it.</p></div>
+      <div class="limit"><h3>Sessions verified twice</h3><p>The backend issues a JWT; Next.js middleware verifies it before a page renders and the API verifies it again on every call. Google OAuth logins bridge into the same cookie.</p></div>
+      <div class="limit"><h3>The broker connection is read-only</h3><p>Read-only by token scope, and there is no order path anywhere in the codebase.</p></div>
+      <div class="limit"><h3>Secrets in the orchestrator</h3><p>Secrets live in the stack environment, never in the repository. Non-secret configuration deliberately does live in the repository, so its history is readable.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Operations</div>
+    <h2>A deploy is a push</h2>
+    <p>
+      The orchestrator polls the repository, builds the images on the server and recreates the
+      changed services. Rollback is a revert and another poll.
+    </p>
+    <p>
+      <strong>Scheduled work</strong> runs from host cron as a module inside the running backend
+      container, 2.5 hours after the regulator publishes its daily index. No HTTP and no
+      long-lived admin token in a file on disk. The sweep takes the same advisory lock the UI
+      button takes, prints a JSON report of examined / due / regenerated, and exits non-zero if
+      any entity failed, so a scheduler watching exit codes notices.
+    </p>
+    <p>
+      <strong>Monitoring today</strong> is Docker healthchecks and restart policies, the
+      orchestrator&rsquo;s container view, the sweep&rsquo;s exit code and log, and a structured in-app log
+      viewer with a request id on every entry, so a reported problem can be traced to a request
+      without shell access.
+    </p>
+    <p>
+      <strong>The monitoring gap, stated honestly:</strong> there is no metrics stack and no
+      paging. For a single-user internal tool that is a deliberate cost decision rather than an
+      oversight, and it is the first thing I would add if it carried anyone else&rsquo;s money.
+    </p>
+  </section>
+
+  <section>
+    <div class="eyebrow">Stack</div>
+    <h2>Eight services, one stack file</h2>
+
+    <div class="stackgrid">
+      <div class="stackgroup">
+        <h3>Backend</h3>
+        <div class="chips">
+          <span class="chip hot">Python 3.12</span><span class="chip hot">Flask 3.1</span>
+          <span class="chip">gunicorn</span><span class="chip">Pydantic v2</span>
+          <span class="chip">Decimal end to end</span>
+        </div>
+      </div>
+      <div class="stackgroup">
+        <h3>Frontend</h3>
+        <div class="chips">
+          <span class="chip hot">Next.js 16</span><span class="chip hot">React 19</span>
+          <span class="chip">TypeScript</span><span class="chip">Tailwind 4</span>
+          <span class="chip">Radix / shadcn</span><span class="chip">Recharts</span>
+        </div>
+      </div>
+      <div class="stackgroup">
+        <h3>Data and async</h3>
+        <div class="chips">
+          <span class="chip hot">MongoDB</span><span class="chip">pymongo</span>
+          <span class="chip">Mongo job queues</span><span class="chip">Leases</span>
+          <span class="chip">Advisory lock</span><span class="chip">TTL + unique indexes</span>
+        </div>
+      </div>
+      <div class="stackgroup">
+        <h3>Automation</h3>
+        <div class="chips">
+          <span class="chip">Playwright over CDP</span><span class="chip">Long-lived Chrome</span>
+          <span class="chip">Host cron</span>
+        </div>
+      </div>
+      <div class="stackgroup">
+        <h3>Infrastructure</h3>
+        <div class="chips">
+          <span class="chip">Docker Compose</span><span class="chip">Portainer GitOps</span>
+          <span class="chip">Cloudflare Tunnel</span><span class="chip">Zero Trust Access</span>
+          <span class="chip">WireGuard</span>
+        </div>
+      </div>
+      <div class="stackgroup">
+        <h3>Security and testing</h3>
+        <div class="chips">
+          <span class="chip">Fernet</span><span class="chip">HMAC-SHA256</span>
+          <span class="chip">NextAuth + JWT</span><span class="chip hot">pytest, 2568 tests</span>
+          <span class="chip">In-memory Mongo fake</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="rollout">deliberate non-choices &nbsp;&rarr;&nbsp; no Redis / Celery / RabbitMQ &nbsp;&middot;&nbsp; no LLM vendor API &nbsp;&middot;&nbsp; no Kubernetes &nbsp;&middot;&nbsp; no CI runner &nbsp;&middot;&nbsp; no image registry</div>
+
+    <p>
+      The LLM one is worth a sentence. Deep research runs against the commercial research
+      products through a browser a human signed into once, not through a vendor API, because the
+      products and the APIs do not do the same thing. The API path exists as a typed provenance
+      value and is deliberately not built. And an explicit rule with tests behind it says the
+      language model supplies <strong>no numbers</strong>: narrative fields are validated against
+      a forbidden-field list.
+    </p>
+  </section>
+
+  <section>
+    <div class="eyebrow">Engineering practices</div>
+    <h2>Claims that were measured, not felt</h2>
+    <div class="twocol">
+      <p>
+        2,568 backend tests across 114 files. The clock, the HTTP transport and the database are
+        injected everywhere, so the suite runs offline and never waits on a real rate limiter.
+        Bugs ship regression-first: the currency fix shipped with six new tests, one class of
+        which is named after the invariant it protects.
+      </p>
+      <p>
+        Type checking and lint gate the frontend, compared against a stashed baseline so &ldquo;no new
+        warnings&rdquo; is a measured claim rather than an impression. Non-obvious constants carry the
+        measurement that produced them and the date it was taken. The whole UI is bilingual,
+        about 1,360 translation keys, with label maps holding keys rather than resolved strings so
+        module-level constants cannot capture the wrong language.
+      </p>
+    </div>
+
+    <p class="note">
+      Anonymized public documentation. Credentials, broker account data, investment strategy,
+      real positions and private endpoints are deliberately excluded. The source repository is
+      private. An anonymized example of the product output is available as a
+      <a href="sample-report.html">sample valuation report</a>.
+    </p>
+  </section>
+
+  <div class="footer">
+    <span>Anonymized engineering documentation</span>
+    <a href="../">Back to portfolio</a>
+    <a href="../buco-arbitrage/">Arbitrage platform</a>
+    <a href="sample-report.html">Sample report</a>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sample valuation report (anonymized)</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --line: #e3e6ea;
+    --ink: #14181d;
+    --muted: #667080;
+    --faint: #8a93a1;
+    --accent: #1f6feb;
+    --good: #1a7f52;
+    --warn: #9a6b00;
+    --bad: #b03030;
+    --chip: #eef1f5;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1116; --panel: #161b22; --line: #262c36; --ink: #e6edf3;
+      --muted: #9aa5b1; --faint: #6e7781; --accent: #4a8bf5; --good: #3fb950;
+      --warn: #d29922; --bad: #f06060; --chip: #21262d;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 28px 20px 60px;
+    background: var(--bg); color: var(--ink);
+    font: 14px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  .banner {
+    border: 1px dashed var(--line); border-radius: 10px; padding: 10px 14px;
+    color: var(--muted); font-size: 12.5px; margin-bottom: 22px; background: var(--panel);
+  }
+  header.top { display: flex; flex-wrap: wrap; gap: 14px; align-items: baseline; margin-bottom: 6px; }
+  h1 { font-size: 21px; margin: 0; letter-spacing: -0.01em; }
+  .ticker { font-family: var(--mono); color: var(--muted); font-size: 13px; }
+  .sub { color: var(--faint); font-size: 12.5px; margin-bottom: 22px; }
+  .grid { display: grid; gap: 14px; }
+  .cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .cols-2 { grid-template-columns: 1.4fr 1fr; }
+  @media (max-width: 860px) { .cols-4 { grid-template-columns: repeat(2,1fr); } .cols-2 { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 14px 16px;
+  }
+  .label { font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); margin-bottom: 6px; }
+  .big { font-size: 25px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .note { font-size: 12px; color: var(--muted); margin-top: 5px; }
+  .chip {
+    display: inline-block; padding: 2px 8px; border-radius: 999px;
+    background: var(--chip); font-size: 11.5px; color: var(--muted);
+    font-family: var(--mono);
+  }
+  .chip.good { color: var(--good); } .chip.warn { color: var(--warn); } .chip.bad { color: var(--bad); }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .07em; color: var(--faint); margin: 30px 0 12px; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-weight: 500; color: var(--faint); font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; padding: 0 10px 8px 0; }
+  td { padding: 8px 10px 8px 0; border-top: 1px solid var(--line); vertical-align: top; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); }
+  .ladder { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center; }
+  .rung { display: contents; }
+  .rung > span:first-child { padding: 6px 0; border-top: 1px solid var(--line); }
+  .rung > span:last-child { padding: 6px 0; border-top: 1px solid var(--line); text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .here { color: var(--accent); font-weight: 600; }
+  .bar { height: 6px; border-radius: 3px; background: var(--chip); overflow: hidden; margin-top: 8px; }
+  .bar > i { display: block; height: 100%; background: var(--good); }
+  .mono { font-family: var(--mono); font-size: 12px; word-break: break-all; }
+  .muted { color: var(--muted); }
+  ul.tl { list-style: none; padding: 0; margin: 0; }
+  ul.tl li { border-top: 1px solid var(--line); padding: 9px 0; display: grid; grid-template-columns: 92px 1fr; gap: 12px; font-size: 13px; }
+  ul.tl li span:first-child { font-family: var(--mono); color: var(--faint); font-size: 12px; }
+  footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--faint); font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="banner">
+    <strong>Anonymized sample.</strong> Fictional company, fictional figures,
+    real output shape. Produced to illustrate the report the platform renders
+    without disclosing any position, holding or private data.
+  </div>
+
+  <header class="top">
+    <h1>Northwind Logistics, Inc.</h1>
+    <span class="ticker">NWLG &middot; NASDAQ &middot; LEI 5493•••••••••••••••42</span>
+  </header>
+  <div class="sub">
+    Valuation run <span class="mono">run_9f2c14a8</span> &middot; engine v14 &middot;
+    assumption set v2026_08 &middot; computed 2026-08-29 04:41 UTC &middot;
+    trigger <span class="chip">AUTO_FILING</span>
+  </div>
+
+  <div class="grid cols-4">
+    <div class="card">
+      <div class="label">Engine</div>
+      <div class="big">$41.80</div>
+      <div class="note">Filings only. DCF on forward FCFF, WACC 8.9%.</div>
+    </div>
+    <div class="card">
+      <div class="label">Research</div>
+      <div class="big">$46.25</div>
+      <div class="note">Mean of 2 admitted reports, same currency, same day.</div>
+    </div>
+    <div class="card">
+      <div class="label">Blended</div>
+      <div class="big">$43.14</div>
+      <div class="note">Engine weighted with research at policy weight 0.30.</div>
+    </div>
+    <div class="card">
+      <div class="label">Market</div>
+      <div class="big">$32.60</div>
+      <div class="note">
+        +32.4% to blended &middot; <span class="chip good">BUY</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>Price bands</h2>
+  <div class="grid cols-2">
+    <div class="card">
+      <div class="ladder">
+        <div class="rung"><span>Deep value <span class="muted">(50% below fair)</span></span><span>&le; $21.57</span></div>
+        <div class="rung"><span class="here">Value <span class="muted">(25% below fair)</span> &larr; price is here</span><span class="here">&le; $32.36</span></div>
+        <div class="rung"><span>Fair</span><span>&le; $43.14</span></div>
+        <div class="rung"><span>Expensive <span class="muted">(25% above fair)</span></span><span>&gt; $53.93</span></div>
+      </div>
+      <div class="note">
+        One forecast at four prices, not four scenarios. The ladder is a
+        versioned assumption, so "Value" means the same thing for every company.
+      </div>
+    </div>
+    <div class="card">
+      <div class="label">Scenarios</div>
+      <table>
+        <tr><td>Bear</td><td class="num">$29.10</td></tr>
+        <tr><td>Base</td><td class="num">$41.80</td></tr>
+        <tr><td>Bull</td><td class="num">$58.40</td></tr>
+      </table>
+      <div class="note">Reverse DCF: today's price implies 1.8% terminal growth.</div>
+    </div>
+  </div>
+
+  <h2>Research scoreboard</h2>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Source</th><th>Retrieved</th><th class="num">Claims</th>
+          <th class="num">Supported</th><th class="num">Fair value</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Provider A</td><td>2026-08-29</td><td class="num">12</td>
+          <td class="num">11</td><td class="num">$47.00</td>
+          <td><span class="chip good">ADMITTED</span></td>
+        </tr>
+        <tr>
+          <td>Provider B</td><td>2026-08-29</td><td class="num">12</td>
+          <td class="num">9</td><td class="num">$45.50</td>
+          <td><span class="chip good">ADMITTED</span></td>
+        </tr>
+        <tr>
+          <td>Provider C</td><td>2026-08-22</td><td class="num">7</td>
+          <td class="num">2</td><td class="num">&mdash;</td>
+          <td><span class="chip bad">REFUSED</span></td>
+        </tr>
+        <tr>
+          <td>Provider D</td><td>2026-08-19</td><td class="num">9</td>
+          <td class="num">6</td><td class="num">&mdash;</td>
+          <td><span class="chip bad">MISATTRIBUTED</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="bar"><i style="width:57%"></i></div>
+    <div class="note">
+      Two of four reports admitted. A refused report stays visible and stays in
+      the divisor: hiding it would leave a scoreboard that only shows what
+      happened to pass. Provider D failed on a single citation whose host was
+      not the publisher it named, which is fatal on its own rather than by
+      degree.
+    </div>
+  </div>
+
+  <h2>Why a claim failed</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Claim</th><th>Verdict</th><th>Reason</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>"Operating margin reached 14.2% in FY2025"</td>
+          <td><span class="chip good">SUPPORTED</span></td>
+          <td class="muted">Quote located in archived filing, figure matches, entity matches.</td>
+        </tr>
+        <tr>
+          <td>"Management guided to double-digit growth"</td>
+          <td><span class="chip warn">QUOTE_REJECTED</span></td>
+          <td class="muted">Too generic to check. Different from "we looked and it is not there".</td>
+        </tr>
+        <tr>
+          <td>"Backlog stood at $2.1bn"</td>
+          <td><span class="chip bad">QUOTE_ABSENT</span></td>
+          <td class="muted">Not present in the archived page. Classic invented citation.</td>
+        </tr>
+        <tr>
+          <td>"Fleet utilisation improved to 91%"</td>
+          <td><span class="chip bad">SOURCE_OFF_ENTITY</span></td>
+          <td class="muted">Quote is real, and from a different company's filing.</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="note">
+      Every cited page is archived before it is checked, because a verdict that
+      depends on a live page stops being a verdict the moment the page is edited.
+    </div>
+  </div>
+
+  <h2>Timeline</h2>
+  <div class="card">
+    <ul class="tl">
+      <li><span>2026-08-29</span><span>Valuation regenerated. Trigger: new annual filing. Value moved $39.10 &rarr; $41.80.</span></li>
+      <li><span>2026-08-29</span><span>Two research reports admitted, one refused.</span></li>
+      <li><span>2026-08-24</span><span>Price crossed from Fair into Value band.</span></li>
+      <li><span>2026-08-11</span><span>Engine upgraded to v14. Prior run re-derived, difference recorded.</span></li>
+      <li><span>2026-07-30</span><span>Fundamentals marked stale: past the filer's own reporting obligation.</span></li>
+    </ul>
+  </div>
+
+  <h2>Provenance</h2>
+  <div class="card">
+    <table>
+      <tr><td style="width:190px">Input hash</td><td class="mono">sha256:7b41c0d9e2a8f5136ab04c7e91d28f60c5a3be7742d0198fcb6e35a0d4917c2b</td></tr>
+      <tr><td>Primary source</td><td>SEC EDGAR XBRL companyfacts, CIK 000••••••, fetched 2026-08-29 04:39 UTC</td></tr>
+      <tr><td>Price as of</td><td>2026-08-28 close, frozen into the run</td></tr>
+      <tr><td>Risk-free rate</td><td>4.21%, observed, as of 2026-08-28</td></tr>
+      <tr><td>Replay</td><td><span class="chip good">IDENTICAL</span> recomputed from stored inputs, no field differs</td></tr>
+    </table>
+    <div class="note">
+      The run stores the exact digits it was handed, not a tidied copy. Replay
+      can return only three answers: identical, the value moved because the code
+      changed, or the hash no longer matches its payload, which means the record
+      was altered after the fact.
+    </div>
+  </div>
+
+  <footer>
+    Fictional data. No holding, position, credential or private endpoint is
+    represented here. Not investment advice.
+  </footer>
+
+</div>
+</body>
+</html>
