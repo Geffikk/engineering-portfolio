@@ -790,6 +790,6 @@ figcaption {
 .sechead .intro {
   font-size: 15.5px;
   color: var(--muted);
-  max-width: 62ch;
+  max-width: none;
   margin-top: 2px;
 }
