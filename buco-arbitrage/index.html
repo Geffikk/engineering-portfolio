@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Two Legs, No Rollback - Cross-Venue Arbitrage Platform</title>
-<meta name="description" content="Engineering case study of a production cross-venue arbitrage platform: architecture, the hardest problem, risk limits and stack.">
+<title>Cross-Venue Arbitrage Platform</title>
+<meta name="description" content="Anonymized documentation for a production cross-venue arbitrage platform: what it does, architecture, execution model, risk limits, stack, deployment and operations.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="../assets/site.css?v=4">
-<script src="../assets/theme.js?v=4"></script>
+<link rel="stylesheet" href="../assets/site.css?v=5">
+<script src="../assets/theme.js?v=5"></script>
 </head>
 <body>
 
@@ -40,16 +40,16 @@
 
   <header class="mast">
     <div class="kicker">
-      <span>Engineering case study</span><span>/</span>
+      <span>Project documentation</span><span>/</span>
       <span>Personal project</span><span>/</span>
       <span>Feb 2026 &ndash; present</span><span>/</span>
       <b>Live in production</b>
     </div>
-    <h1>Two legs, no <em>rollback</em></h1>
+    <h1>Cross-venue arbitrage platform</h1>
     <p class="standfirst">
-      A real-time cross-venue arbitrage platform. The arithmetic is trivial. The engineering
-      is everything that happens when one leg fills, the other is rejected, and there is no
-      transaction to roll back.
+      A self-hosted platform that continuously compares prices for the same sporting fixture
+      across two independent classes of venue, detects two-leg arbitrage, and places both legs
+      automatically under code-enforced risk limits. Running in production with real money.
     </p>
   </header>
 
@@ -213,88 +213,79 @@
   </section>
 
   <section>
-    <div class="eyebrow">The hardest problem</div>
-    <h2>Two systems, no shared transaction</h2>
+    <div class="eyebrow">Execution model</div>
+    <h2>How a job is executed safely</h2>
     <p class="lede">
-      Leg A is a sportsbook with no trading API, reached through a browser session and a
-      captured authenticated request, latency measured in seconds. Leg B is an on-chain order
-      book with fill-or-kill semantics and a relayer. There is no two-phase commit between
-      them. If one fills and the other does not, the result is not a failed job. It is a naked
-      directional position with real money in it, at 2am, with nobody watching.
+      An arbitrage exists only while both legs exist. The two venues are unrelated systems with
+      different latencies and different failure modes, and no transaction spans them. Everything
+      below exists so that a partial failure is survivable, visible and recoverable.
     </p>
 
-    <div class="case">
-      <div class="panel broke">
-        <span class="tag">What the first design did</span>
-        <p>A coordinator held the job in memory, called both venues, wrote the result to MongoDB. It failed in every way a distributed system can:</p>
-        <ul>
-          <li><strong>Double submits.</strong> Check-then-act across a network is not atomic. A restart in the wrong 200&nbsp;ms window submitted the same bet twice.</li>
-          <li><strong>Lost commands.</strong> A hedge order was decided, recorded, and never emitted before the process died. The database said hedged. Reality said naked.</li>
-          <li><strong>Zombie writers.</strong> A hung executor woke up minutes later and wrote into a job that had already closed.</li>
-          <li><strong>Lying reports.</strong> PnL came from the plan, not the fill, so profitable trades were classified as losses.</li>
-        </ul>
+    <div class="limits">
+      <div class="limit">
+        <h3>Single writer</h3>
+        <p>All execution state is written by one Lua script running server-side inside Redis. Admission, budget checks, phase transitions and command emission happen in one atomic operation, so a check-then-act race across processes cannot occur.</p>
       </div>
-
-      <div class="panel built">
-        <span class="tag">What I built instead</span>
-        <ul>
-          <li><strong>One authority, inside the datastore.</strong> All execution state moved into a single ~2,500-line Lua script run server-side by Redis. Admission, budget checks, phase transitions and command emission are one atomic operation. A distributed race became a single-threaded one.</li>
-          <li><strong>Fencing tokens</strong> at fixture and resource level. A stale worker fails its write on a fence mismatch instead of corrupting a newer job.</li>
-          <li><strong>Emission as a recorded fact.</strong> &ldquo;Decided to emit&rdquo; and &ldquo;emitted&rdquo; are separate facts written together, with an audit asserting they agree.</li>
-          <li><strong>Pure decision functions</strong> with no clock, network or database, which made a <strong>frozen replay corpus</strong> possible: real end-to-end outcomes pinned down to phase, exposure, command lineage and economics.</li>
-        </ul>
+      <div class="limit">
+        <h3>Fencing tokens</h3>
+        <p>Every fixture carries a fence, and every claimed resource carries its own. A worker must present the fence it was issued, so a stalled worker that resumes late fails its write instead of overwriting newer state.</p>
       </div>
-
-      <div class="panel changed">
-        <span class="tag">What actually changed</span>
-        <p>
-          Open exposure did not go to zero, because it cannot. A venue can always go down
-          mid-trade. What changed is that every occurrence became detected, classified,
-          bounded and explained.
-        </p>
-        <p>
-          A later cluster of five exposures was attributed to four venue outages and exactly
-          one bug of ours, fixed the same day. That attribution was impossible in the original
-          design, and it is the difference between running a system and hoping about one.
-        </p>
+      <div class="limit">
+        <h3>Idempotent triggers</h3>
+        <p>A repeated trigger returns the original job envelope rather than creating a second job, and a duplicate result delivery is recorded and acknowledged without changing authority state.</p>
+      </div>
+      <div class="limit">
+        <h3>Proved emission</h3>
+        <p>&ldquo;A command was decided&rdquo; and &ldquo;a command was emitted&rdquo; are two separate recorded facts, written in the same atomic operation. A scheduled audit asserts that they always agree.</p>
+      </div>
+      <div class="limit">
+        <h3>Pure decision functions</h3>
+        <p>Sizing, worst-case scoring, hedge repricing, flatten sizing and terminal-state classification take no clock, no network and no database. They are deterministic functions of their inputs.</p>
+      </div>
+      <div class="limit">
+        <h3>Frozen replay corpus</h3>
+        <p>A committed corpus pins real end-to-end outcomes down to authority phase, exposure, command lineage and economics. Any change to execution semantics fails CI and names the invariant that moved.</p>
       </div>
     </div>
   </section>
 
   <section>
-    <div class="eyebrow">The failures that taught the most</div>
-    <h2>Almost none of them were crashes</h2>
+    <div class="eyebrow">Job lifecycle</div>
+    <h2>Every job ends in a named state</h2>
+    <p>
+      A job never ends as simply &ldquo;failed&rdquo;. It ends in one of a small set of explicit states, each
+      carrying the evidence that produced it. This vocabulary is what makes the operator screens
+      readable and automated recovery possible.
+    </p>
 
     <div class="tablewrap">
       <table>
-        <thead>
-          <tr><th>Failure</th><th>Why nothing caught it</th><th>What went into the system</th></tr>
-        </thead>
+        <thead><tr><th>Terminal state</th><th>Meaning</th><th>What follows</th></tr></thead>
         <tbody>
           <tr>
-            <td class="wrapcell">Production dead for nine days</td>
-            <td>Alerting only reacted to things that <em>happen</em>. A cleanly stopped stack emits nothing at all.</td>
-            <td>A watchdog with a <strong>declared</strong> list of expected services, never a derived one, because a derived list is empty exactly when the stack is gone. Plus a daily heartbeat, so silence became a signal.</td>
+            <td class="wrapcell">Completed</td>
+            <td>Both legs filled at or better than the planned prices.</td>
+            <td>Settlement and realized PnL are computed from the measured fills only.</td>
           </tr>
           <tr>
-            <td class="wrapcell">One sport produced zero jobs for 33 days</td>
-            <td>Nothing was red. The pipeline was running, ingesting and matching. The failure was an absence in a count nobody counted.</td>
-            <td>Counts of expected work became health signals, and every declined opportunity now records a named rejection reason.</td>
+            <td class="wrapcell">Loss mitigated</td>
+            <td>One leg was committed, the hedge was no longer viable, and the position was deliberately closed.</td>
+            <td>Recorded as a known, bounded loss rather than left as an open position.</td>
           </tr>
           <tr>
-            <td class="wrapcell">Money numbers confidently wrong</td>
-            <td>Reporting derived from intent, not measurement: planned stake instead of measured fill, a partial fill read as no fill, a fee model using the wrong rate.</td>
-            <td>All money derives from measured fills or is labelled planned. A backfill recomputed history without overwriting a single original measurement; unexplained settlement fell from 41% to 1%.</td>
+            <td class="wrapcell">Open exposure</td>
+            <td>One leg filled and the other did not, leaving real directional risk. The naked leg is named.</td>
+            <td>Re-size and rescue run first; anything unresolved is surfaced to the operator and blocks further automation on that fixture.</td>
           </tr>
           <tr>
-            <td class="wrapcell">A schema cutover hid in-play fixtures</td>
-            <td>The new write primitive de-duplicated identical catalog re-sends, so unchanged metadata stopped refreshing its timestamp and fresh prices looked stale.</td>
-            <td>Separate freshness horizons for catalog and prices, and a strict per-key ownership contract with epochs and back-off.</td>
+            <td class="wrapcell">Rejected</td>
+            <td>A named gate refused the job: budget, margin, staleness, depth or duplicate.</td>
+            <td>The reason is counted, so &ldquo;why did nothing happen&rdquo; always has an answer.</td>
           </tr>
           <tr>
-            <td class="wrapcell">A risk policy that felt obviously right</td>
-            <td>Intuition. Closing out a half-open position for a small known loss sounds like prudence.</td>
-            <td>Backtesting across the full recorded history showed it was systematically value-destroying. Every risk knob now has to survive a backtest before it ships, and several plausible ones did not.</td>
+            <td class="wrapcell">Unknown outcome</td>
+            <td>A venue response was ambiguous, so the position is treated as possibly open.</td>
+            <td>Reconciliation resolves it against venue records before the job is closed.</td>
           </tr>
         </tbody>
       </table>

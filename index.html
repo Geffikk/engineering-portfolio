@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="assets/site.css?v=4">
-<script src="assets/theme.js?v=4"></script>
+<link rel="stylesheet" href="assets/site.css?v=5">
+<script src="assets/theme.js?v=5"></script>
 </head>
 <body>
 
@@ -79,8 +79,8 @@
       <p class="intro">
         Every one of these I specified, designed and implemented myself. The two production
         systems I also operate: the containers, the deploys, the monitoring and the on-call.
-        Each write-up covers the architecture, the hardest problem, and what broke on the way
-        there.
+        Each project opens into anonymized documentation: what it does, an architecture diagram,
+        the technology stack, and how it is deployed, secured and kept running.
       </p>
     </div>
 
@@ -93,9 +93,9 @@
           money, under code-enforced risk limits.
         </p>
         <ul class="bullets">
-          <li>Two legs on two systems with no shared transaction and no rollback</li>
-          <li>One Lua script inside Redis is the only writer of execution state</li>
-          <li>Fencing tokens, idempotent triggers and a frozen replay corpus</li>
+          <li>Live prices over WebSocket from two independent venues, paired per fixture</li>
+          <li>Atomic execution authority in Redis: single writer, fencing, idempotent commands</li>
+          <li>Code-enforced risk limits and a named terminal state for every job</li>
         </ul>
         <div class="chips">
           <span class="chip">Python</span><span class="chip">Go</span>
@@ -114,9 +114,9 @@
           them. Language models never supply a number.
         </p>
         <ul class="bullets">
-          <li>Every stored valuation replays a year later and proves unchanged</li>
+          <li>Valuations computed from regulatory filings, hashed so they can be replayed</li>
           <li>Mongo job queues with leases, so a dead worker never loses a job</li>
-          <li>LLM research admitted only on verified citations, refusals kept</li>
+          <li>LLM research admitted only on verified citations, and it supplies no numbers</li>
         </ul>
         <div class="chips">
           <span class="chip">Python</span><span class="chip">Flask</span>
@@ -136,8 +136,8 @@
         </p>
         <ul class="bullets">
           <li>Leak-free rolling backtest: the model never sees a result before predicting it</li>
+          <li>Engineered features from six sources: ELO, form, expected goals, squad power</li>
           <li>A custom Keras loss that penalises agreeing with the bookmaker</li>
-          <li>Three baselines shipped alongside, so every number is a claim and not a boast</li>
         </ul>
         <div class="chips">
           <span class="chip">Python</span><span class="chip">TensorFlow / Keras</span>

@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Numbers That Survive a Year - Equity Valuation Platform</title>
-<meta name="description" content="Engineering case study of a self-hosted equity valuation and portfolio platform: deterministic valuations from filings, LLM research with citation verification, architecture and failure handling.">
+<title>Equity Valuation Platform</title>
+<meta name="description" content="Anonymized documentation for a self-hosted equity valuation and portfolio platform: what it does, architecture, async work, reproducibility, security, operations and stack.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="../assets/site.css?v=4">
-<script src="../assets/theme.js?v=4"></script>
+<link rel="stylesheet" href="../assets/site.css?v=5">
+<script src="../assets/theme.js?v=5"></script>
 </head>
 <body>
 
@@ -40,12 +40,12 @@
 
   <header class="mast">
     <div class="kicker">
-      <span>Engineering case study</span><span>/</span>
+      <span>Project documentation</span><span>/</span>
       <span>Solo project</span><span>/</span>
       <span>2026 &ndash; present</span><span>/</span>
       <b>Live in production</b>
     </div>
-    <h1>Numbers that survive a <em>year</em></h1>
+    <h1>Equity valuation and portfolio platform</h1>
     <p class="standfirst">
       A self-hosted platform that turns regulatory filings into auditable company valuations,
       tracks a real brokerage portfolio against them, and uses language models only where a
@@ -216,78 +216,72 @@
   </section>
 
   <section>
-    <div class="eyebrow">The hardest problem</div>
-    <h2>Making a number provable a year later</h2>
+    <div class="eyebrow">Reproducibility</div>
+    <h2>A stored valuation can be replayed and proven</h2>
     <p class="lede">
-      A valuation that cannot be reproduced is an opinion with a timestamp. The engineering
-      question is not &ldquo;is this number right&rdquo;, which nobody can answer, but &ldquo;is this the number
-      the stored inputs produce&rdquo;, which is decidable.
+      A valuation that cannot be reproduced is an opinion with a timestamp. Every run therefore
+      stores the exact inputs it was computed from, canonicalised and hashed, and a replay can
+      recompute it later and compare field by field.
     </p>
 
-    <div class="case">
-      <div class="panel broke">
-        <span class="tag">Where a hash lies</span>
-        <p>Hashing the inputs is the obvious move and it fails in three quiet ways:</p>
-        <ul>
-          <li><strong>Key order.</strong> The same document serialized twice can hash differently.</li>
-          <li><strong>Decimal spelling.</strong> A filer&rsquo;s trailing zero looks like a changed value.</li>
-          <li><strong>Binary floats.</strong> Converting one into a hashed payload is exactly where lost precision becomes invisible.</li>
-        </ul>
+    <div class="limits">
+      <div class="limit">
+        <h3>Canonical input hashing</h3>
+        <p>Keys are sorted at every depth so the same document always serialises identically, and decimal spelling is normalised so a filer&rsquo;s trailing zero does not read as a changed value.</p>
       </div>
-
-      <div class="panel built">
-        <span class="tag">What I built</span>
-        <ul>
-          <li><strong>Canonicalisation</strong> that sorts keys at every depth, normalises <code>Decimal</code> spelling, and <strong>refuses</strong> a binary float in a hashed payload outright rather than converting it.</li>
-          <li><strong><code>Decimal</code> end to end</strong>, with no floats anywhere in a hashed path.</li>
-          <li><strong>A replay</strong> that recomputes a stored run from its stored inputs and compares field by field.</li>
-        </ul>
+      <div class="limit">
+        <h3>No binary floats on a hashed path</h3>
+        <p><code>Decimal</code> is used end to end. A float inside a hashed payload is refused outright rather than converted, because the conversion is where lost precision becomes invisible.</p>
       </div>
-
-      <div class="panel changed">
-        <span class="tag">Three possible answers</span>
-        <ul>
-          <li><strong>The hash no longer matches its payload.</strong> The record was altered after the fact.</li>
-          <li><strong>The value moved.</strong> The code changed, which is how an engine upgrade gets measured, and which must never happen silently.</li>
-          <li><strong>Nothing.</strong> Which is the answer that makes the number on the screen defensible.</li>
-        </ul>
-        <p>Being strict here is what lets everything downstream stay simple: no rounding rules, no tolerance windows, no &ldquo;close enough&rdquo; comparisons.</p>
+      <div class="limit">
+        <h3>Replay with three outcomes</h3>
+        <p>The hash no longer matches its payload, meaning the record was altered. The value moved, meaning the engine changed. Or nothing moved, which is what makes the number defensible.</p>
+      </div>
+      <div class="limit">
+        <h3>No tolerance windows</h3>
+        <p>Because the inputs are exact, comparison is exact. There are no rounding rules and no &ldquo;close enough&rdquo; thresholds anywhere downstream.</p>
+      </div>
+      <div class="limit">
+        <h3>Language models supply no numbers</h3>
+        <p>An explicit rule with tests behind it. Narrative fields from research reports are validated against a forbidden-field list, so a model can describe but never price.</p>
+      </div>
+      <div class="limit">
+        <h3>Citations are verified</h3>
+        <p>Research reports are admitted on the share of their claims that can be traced back to the page they cited, and the card shows the divisor so a reader can judge the score themselves.</p>
       </div>
     </div>
   </section>
 
   <section>
-    <div class="eyebrow">Other problems worth describing</div>
-    <h2>Four bugs that were not what they looked like</h2>
+    <div class="eyebrow">Design decisions</div>
+    <h2>Deliberate non-choices</h2>
+    <p>
+      Worth stating explicitly, because these are the questions the architecture gets asked.
+    </p>
 
     <div class="tablewrap">
       <table>
-        <thead><tr><th>Symptom</th><th>What it actually was</th><th>The fix</th></tr></thead>
+        <thead><tr><th>Not used</th><th>Used instead</th><th>Reason</th></tr></thead>
         <tbody>
           <tr>
-            <td class="wrapcell">Three research reports took three sequential runs</td>
-            <td>Threads looked like the answer, but a Playwright sync connection cannot be shared across threads. The browser was never the limit, the connection was.</td>
-            <td>One worker <strong>process</strong> per source, pinned so a worker never takes another source&rsquo;s job. Three sites run concurrently while the guarantee that mattered, at most one conversation per site, still holds.</td>
+            <td class="wrapcell">Redis, Celery or RabbitMQ</td>
+            <td>Two Mongo-backed job queues with atomic claim and leases</td>
+            <td>A job is a document that survives being consumed, which is what makes a failure three days ago answerable. A broker would add a container, a connection, a failure mode and a second place the truth lives, to buy throughput a few dozen jobs a day never need.</td>
           </tr>
           <tr>
-            <td class="wrapcell">Reports scored 1 to 5 out of 12 on citation checks</td>
-            <td>The tempting fix was to lower the bar, which would have hidden the bug. The checker read five of a page&rsquo;s twenty sources, demanded both ends of a hedged range, refused the same figure written in millions instead of billions, and asked whether one three-sentence window carried a claim stating three separate facts.</td>
-            <td>Fix the checker, not the threshold. Same provider, same company, 11 of 12. The card now shows the divisor, so a reader can tell 12 of 12 from 5 of 12 without knowing a threshold exists.</td>
+            <td class="wrapcell">An LLM vendor API</td>
+            <td>Commercial research products driven through a signed-in browser</td>
+            <td>The products and the APIs do not do the same thing. The API path exists as a typed provenance value and is deliberately not built.</td>
           </tr>
           <tr>
-            <td class="wrapcell">A company with two finished reports showed a dash and &ldquo;no verified number yet&rdquo;</td>
-            <td>One root cause in two places. The guard preventing cross-currency averaging compared raw strings, so <code>$80</code> and <code>USD 65</code> looked like two currencies. Separately the chart keyed points by exact timestamp although its own comment claimed same-day reports were averaged.</td>
-            <td>Normalise currency to an ISO code at extraction <strong>and at read time</strong>, so documents already stored were corrected with no migration, and group the chart by calendar day through the same functions that compute the card. Chart and card can no longer disagree.</td>
+            <td class="wrapcell">Kubernetes</td>
+            <td>One host, eight services, a single compose file</td>
+            <td>The workload is a single-tenant internal tool. Orchestration complexity would exceed the problem it solves.</td>
           </tr>
           <tr>
-            <td class="wrapcell">The whole analysis surface answered 403 for most of every week</td>
-            <td>The backend token lifetime and the web session lifetime had drifted six days apart. The cause was <code>${VAR:-default}</code> in the compose file with an explicit value set in the orchestrator&rsquo;s stack environment: the explicit value wins, silently, so changing the default in version control did nothing.</td>
-            <td>Both values are literals in the compose file, the web session length derives from the backend&rsquo;s, and the reason is a comment above the line. Non-secret configuration does not belong somewhere only one person can read.</td>
-          </tr>
-          <tr>
-            <td class="wrapcell">The listing page took 2.70s</td>
-            <td>2.57s of it was 42 sequential upstream price calls sitting inside the request path.</td>
-            <td>A stale-while-revalidate cache: 3s cold, 0.19s warm, including after the TTL expires, because the stale value is returned while the refresh runs behind it. An empty upstream response is never cached, because a slow reload beats showing &ldquo;no companies&rdquo; for fifteen minutes.</td>
+            <td class="wrapcell">A CI runner and an image registry</td>
+            <td>GitOps polling with server-side image builds</td>
+            <td>A deploy is a push, and the live commit is readable from the running container. Nothing has to be published to move code to the host.</td>
           </tr>
         </tbody>
       </table>
@@ -436,13 +430,13 @@
 
   <section>
     <div class="eyebrow">Engineering practices</div>
-    <h2>Claims that were measured, not felt</h2>
+    <h2>Engineering practices</h2>
     <div class="twocol">
       <p>
         2,568 backend tests across 108 files. The clock, the HTTP transport and the database are
         injected everywhere, so the suite runs offline and never waits on a real rate limiter.
-        Bugs ship regression-first: the currency fix shipped with six new tests, one class of
-        which is named after the invariant it protects.
+        Bug fixes ship regression-first, and regression tests are named after the invariant they
+        protect rather than after the ticket that produced them.
       </p>
       <p>
         Type checking and lint gate the frontend, compared against a stashed baseline so &ldquo;no new

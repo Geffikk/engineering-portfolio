@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>A Model With Its Own Opinion - Football Forecasting Framework</title>
-<meta name="description" content="Engineering case study of a football event modelling and prediction framework: leak-free rolling backtests, engineered features, a bookmaker-decorrelation loss and a profitability layer.">
+<title>Football Forecasting Framework</title>
+<meta name="description" content="Anonymized documentation for a football event modelling and prediction framework: what it does, rolling backtests, architecture, features, evaluation, stack and limitations.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="../assets/site.css?v=4">
-<script src="../assets/theme.js?v=4"></script>
+<link rel="stylesheet" href="../assets/site.css?v=5">
+<script src="../assets/theme.js?v=5"></script>
 </head>
 <body>
 
@@ -40,12 +40,12 @@
 
   <header class="mast">
     <div class="kicker">
-      <span>Engineering case study</span><span class="sep">/</span>
+      <span>Project documentation</span><span class="sep">/</span>
       <span>University thesis project</span><span class="sep">/</span>
       <span>Solo</span><span class="sep">/</span>
       <b>Framework, not a product</b>
     </div>
-    <h1>A model with its own <em>opinion</em></h1>
+    <h1>Football event forecasting framework</h1>
     <p class="standfirst">
       A framework for modelling and predicting football events, and then checking whether those
       predictions would actually have made money. Two different questions, deliberately kept
@@ -244,39 +244,54 @@
   </section>
 
   <section>
-    <div class="eyebrow">The most interesting idea</div>
-    <h2>A loss function that penalises agreeing with the bookmaker</h2>
+    <div class="eyebrow">Models</div>
+    <h2>Six predictors, three of them baselines</h2>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Model</th><th>Implementation</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td>Neural network</td><td>Keras sequential, LeakyReLU, dropout, L2, sigmoid output</td><td>The flagship model, and the only one carrying the decorrelation loss.</td></tr>
+          <tr><td>Random forest</td><td>scikit-learn, optional hyperparameter tuning</td><td>Tree comparison against the network on the same features.</td></tr>
+          <tr><td>Gradient boosting</td><td>XGBoost, optional hyperparameter tuning</td><td>Second tree comparison, and the one that handles sentinel imputation best.</td></tr>
+          <tr><td>Historical</td><td>Custom</td><td>Baseline: predicts from historical base rates.</td></tr>
+          <tr><td>Random</td><td>Custom</td><td>Baseline: the sanity floor. Anything below it is noise.</td></tr>
+          <tr><td>Always favourite</td><td>Custom</td><td>Baseline: backs the shortest price, so it represents the market itself.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      The baselines are what make the results readable. Accuracy on its own is not a claim; the
+      same number stated next to a random floor and next to the market is.
+    </p>
+  </section>
+
+  <section>
+    <div class="eyebrow">Bookmaker decorrelation</div>
+    <h2>The model is trained to disagree, and be right</h2>
     <p class="lede">
       A bettor only profits where they disagree with the market and turn out to be right. A model
-      that perfectly reproduces the bookmaker&rsquo;s opinion has, by construction, zero edge: it just
-      pays the margin. So the flagship model does not only optimise for being correct.
+      that reproduces the bookmaker&rsquo;s opinion has, by construction, zero edge: it just pays the
+      margin. The flagship model therefore does not only optimise for being correct.
     </p>
 
-    <div class="case">
-      <div class="panel broke">
-        <span class="tag">The trap</span>
-        <p>
-          Train a classifier on football data with the bookmaker&rsquo;s implied probability available
-          anywhere in the feature set, or even just correlated with it, and it converges on the
-          market price. It scores well on accuracy and it is worthless as a betting signal.
-        </p>
+    <div class="limits">
+      <div class="limit">
+        <h3>Two loss terms</h3>
+        <p>Ordinary binary cross-entropy for being correct, plus a penalty that grows as the prediction correlates with the bookmaker&rsquo;s implied probability.</p>
       </div>
-      <div class="panel built">
-        <span class="tag">What I built</span>
-        <p>
-          A custom Keras loss with two terms: ordinary binary cross-entropy for
-          <strong>be correct</strong>, plus a decorrelation penalty for
-          <strong>be different from the bookmaker</strong>. The model is explicitly pushed to
-          find its own signal instead of rediscovering the market price.
-        </p>
+      <div class="limit">
+        <h3>Enabled per configuration</h3>
+        <p>It is a switch on the neural network, not a hard-wired behaviour, so a run with and without it is a controlled comparison rather than two different projects.</p>
       </div>
-      <div class="panel changed">
-        <span class="tag">Why it is honest</span>
-        <p>
-          Because it is measured against an always-back-the-favourite baseline that <em>is</em>
-          the market. If the decorrelated model cannot beat that, the penalty bought nothing,
-          and the comparison says so instead of hiding it.
-        </p>
+      <div class="limit">
+        <h3>Measured against the market</h3>
+        <p>The always-favourite baseline is the market. If the decorrelated model cannot beat it, the penalty bought nothing, and the comparison says so.</p>
+      </div>
+      <div class="limit">
+        <h3>Odds excluded by default</h3>
+        <p>Bookmaker implied probabilities exist as features but are switched off in the default feature set, so the model is not simply handed the answer it is meant to differ from.</p>
       </div>
     </div>
   </section>
@@ -318,12 +333,10 @@
 
   <section>
     <div class="eyebrow">Evaluation</div>
-    <h2>Baselines are what make a number a claim</h2>
+    <h2>From a probability to a bet</h2>
     <p class="lede">
-      &ldquo;62 percent accuracy&rdquo; means nothing on its own. &ldquo;62 percent, where random gets 50 and
-      always backing the favourite gets 58&rdquo; is a claim. Three baselines ship alongside the three
-      real models for exactly that reason: a random floor, a naive historical base rate, and the
-      market itself.
+      A probability is not yet a decision. The financial layer turns the model output into a bet
+      or into nothing at all, and it is the second of the two questions the framework keeps apart.
     </p>
 
     <div class="limits">
