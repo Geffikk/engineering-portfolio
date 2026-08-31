@@ -149,7 +149,7 @@ h1 {
   letter-spacing: -0.024em;
   margin: 0;
   text-wrap: balance;
-  max-width: 20ch;
+  max-width: 26ch;
 }
 
 h2 {
@@ -202,10 +202,13 @@ a:focus-visible, .card:focus-visible, .chip:focus-visible {
 .hero {
   padding-top: clamp(36px, 5vw, 60px);
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.95fr);
+  /* The card is a fixed rail so the headline keeps the width it was designed at
+     and stays on two lines instead of three. */
+  grid-template-columns: minmax(0, 1fr) 360px;
   gap: clamp(28px, 5vw, 68px);
   align-items: start;
 }
+@media (max-width: 1080px) { .hero { grid-template-columns: minmax(0, 1fr) 320px; } }
 @media (max-width: 900px) { .hero { grid-template-columns: 1fr; } }
 
 .hero-copy { display: flex; flex-direction: column; gap: 16px; }
@@ -306,7 +309,9 @@ a:focus-visible, .card:focus-visible, .chip:focus-visible {
 }
 .card h3 {
   font-family: var(--font-display);
-  font-size: clamp(19px, 2.1vw, 23px);
+  /* 22px is the largest size that keeps the longest project title on one line
+     at the designed three-column card width. */
+  font-size: clamp(19px, 2.1vw, 22px);
   font-weight: 600;
   letter-spacing: -0.018em;
   line-height: 1.2;
