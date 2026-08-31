@@ -24,7 +24,6 @@
   --font-body: "Instrument Sans", ui-sans-serif, system-ui, "Segoe UI", Arial, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
 
-  --measure: 66ch;
   --pad: clamp(20px, 4.5vw, 56px);
   --shell: 1280px;
 
@@ -149,7 +148,6 @@ h1 {
   letter-spacing: -0.024em;
   margin: 0;
   text-wrap: balance;
-  max-width: 26ch;
 }
 
 h2 {
@@ -160,7 +158,6 @@ h2 {
   letter-spacing: -0.018em;
   margin: 0;
   text-wrap: balance;
-  max-width: 34ch;
 }
 
 h3 {
@@ -172,7 +169,7 @@ h3 {
   margin: 0;
 }
 
-p { margin: 0; max-width: var(--measure); }
+p { margin: 0; }
 p + p { margin-top: 0.85em; }
 
 .lede { font-size: 17px; color: var(--ink-2); line-height: 1.6; }
@@ -212,7 +209,7 @@ a:focus-visible, .card:focus-visible, .chip:focus-visible {
 @media (max-width: 900px) { .hero { grid-template-columns: 1fr; } }
 
 .hero-copy { display: flex; flex-direction: column; gap: 16px; }
-.hero-copy p { max-width: 54ch; }
+
 .hero-links {
   display: flex;
   flex-wrap: wrap;
@@ -550,7 +547,6 @@ figcaption {
   color: var(--muted);
   border-top: 1px solid var(--hair);
   padding-top: 16px;
-  max-width: var(--measure);
 }
 
 /* ---------- contact ---------- */
@@ -630,13 +626,11 @@ figcaption {
   flex-direction: column;
   gap: 14px;
 }
-.mast h1 { max-width: 18ch; }
 
 .standfirst {
   font-size: 17px;
   line-height: 1.6;
   color: var(--ink-2);
-  max-width: 58ch;
   margin: 0;
 }
 
