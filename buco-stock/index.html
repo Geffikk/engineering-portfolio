@@ -39,7 +39,7 @@
   <dl class="specs">
     <div class="spec"><dt>Services in the stack</dt><dd>8</dd></div>
     <div class="spec"><dt>Lines of code</dt><dd>~80k <small>44k Py / 36k TS</small></dd></div>
-    <div class="spec"><dt>Backend tests</dt><dd>2,568 <small>114 files</small></dd></div>
+    <div class="spec"><dt>Backend tests</dt><dd>2,568 <small>108 files</small></dd></div>
     <div class="spec"><dt>Published host ports</dt><dd>0</dd></div>
     <div class="spec"><dt>Order paths in the code</dt><dd>0 <small>by design</small></dd></div>
   </dl>
@@ -422,7 +422,7 @@
     <h2>Claims that were measured, not felt</h2>
     <div class="twocol">
       <p>
-        2,568 backend tests across 114 files. The clock, the HTTP transport and the database are
+        2,568 backend tests across 108 files. The clock, the HTTP transport and the database are
         injected everywhere, so the suite runs offline and never waits on a real rate limiter.
         Bugs ship regression-first: the currency fix shipped with six new tests, one class of
         which is named after the invariant it protects.
