@@ -1,7 +1,7 @@
 # Engineering portfolio
 
-Anonymized public case studies for two production systems, served as a static
-site by GitHub Pages.
+Anonymized public case studies for the systems I designed and built myself,
+served as a static site by GitHub Pages.
 
 **Live site:** https://geffikk.github.io/engineering-portfolio/
 
@@ -9,9 +9,10 @@ site by GitHub Pages.
 
 | Path | Page |
 | --- | --- |
-| `/` | Landing: both projects, how I work, stack |
+| `/` | Landing: all projects, how I work, stack |
 | `/buco-arbitrage/` | Cross-venue arbitrage platform |
 | `/buco-stock/` | Equity valuation and portfolio platform |
+| `/buco-forecaster/` | Football event forecasting framework |
 | `/buco-stock/sample-report.html` | Anonymized example of the valuation output |
 
 ## Structure
@@ -19,8 +20,10 @@ site by GitHub Pages.
 ```
 index.html                    landing page
 assets/site.css               shared design system for every page
+assets/theme.js               light/dark toggle, applied before first paint
 buco-arbitrage/index.html     case study
 buco-stock/index.html         case study
+buco-forecaster/index.html    case study
 buco-stock/sample-report.html anonymized sample output
 .nojekyll                     serve the files as-is, no Jekyll build
 ```

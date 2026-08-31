@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Model With Its Own Opinion - Football Forecasting Framework</title>
+<meta name="description" content="Engineering case study of a football event modelling and prediction framework: leak-free rolling backtests, engineered features, a bookmaker-decorrelation loss and a profitability layer.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/theme.js"></script>
+</head>
+<body>
+
+<header class="sitebar">
+  <div class="inner">
+    <a class="brand" href="../">Maros Geffert</a>
+    <div class="right">
+      <nav>
+        <a href="../buco-arbitrage/">Arbitrage platform</a>
+        <a href="../buco-stock/">Valuation platform</a>
+        <a href="../buco-forecaster/" aria-current="page">Football forecaster</a>
+        <a href="../">All projects</a>
+      </nav>
+      <button class="themetoggle" type="button" data-theme-toggle aria-label="Switch theme">
+        <svg class="tl-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.2"/>
+          <path d="M12 2.6v2.2M12 19.2v2.2M4.2 12H2M22 12h-2.2M6.1 6.1 4.6 4.6M19.4 19.4l-1.5-1.5M17.9 6.1l1.5-1.5M4.6 19.4l1.5-1.5"/>
+        </svg>
+        <svg class="tl-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none">
+          <path d="M20.5 14.3A8.5 8.5 0 0 1 9.7 3.5a8.5 8.5 0 1 0 10.8 10.8z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <header class="mast">
+    <div class="kicker">
+      <span>Engineering case study</span><span class="sep">/</span>
+      <span>University thesis project</span><span class="sep">/</span>
+      <span>Solo</span><span class="sep">/</span>
+      <b>Framework, not a product</b>
+    </div>
+    <h1>A model with its own <em>opinion</em></h1>
+    <p class="standfirst">
+      A framework for modelling and predicting football events, and then checking whether those
+      predictions would actually have made money. Two different questions, deliberately kept
+      apart, because a model can be right most of the time and still lose.
+    </p>
+  </header>
+
+  <dl class="specs">
+    <div class="spec"><dt>Python</dt><dd>~12.9k <small>43 modules</small></dd></div>
+    <div class="spec"><dt>Leagues covered</dt><dd>7 <small>top European</small></dd></div>
+    <div class="spec"><dt>History</dt><dd>2012+ <small>seasons</small></dd></div>
+    <div class="spec"><dt>Models compared</dt><dd>3 <small>+ 3 baselines</small></dd></div>
+    <div class="spec"><dt>External sources</dt><dd>6 <small>API + scraped</small></dd></div>
+  </dl>
+
+  <section>
+    <div class="eyebrow">What it does</div>
+    <h2>Two questions that are easy to confuse</h2>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Question</th><th>Who asks it</th><th>How the framework answers</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="wrapcell">Will both teams score in this match?</td>
+            <td>An analyst</td>
+            <td>A trained classifier returns a calibrated probability.</td>
+          </tr>
+          <tr>
+            <td class="wrapcell">Is betting on that actually profitable?</td>
+            <td>A bettor</td>
+            <td>A financial layer compares that probability against the real bookmaker odds.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="lede">
+      Keeping them apart is the whole point. If a model says the favourite wins with 80 percent
+      confidence and the bookmaker offers 1.10, you win often and win almost nothing, and the
+      rare losses eat everything. Accuracy and profitability are not the same measurement, so
+      the framework always runs both layers, one after the other.
+    </p>
+
+    <p>
+      Supported events: <strong>over / under goals</strong>, <strong>both teams to score</strong>,
+      and <strong>1X2</strong>. It runs in two modes: a backtest over historical seasons, and a
+      single-match forecast against live data.
+    </p>
+  </section>
+
+  <section>
+    <div class="eyebrow">The core discipline</div>
+    <h2>The model never sees the future</h2>
+    <p class="lede">
+      The classic mistake in sports modelling is a model that looks brilliant on paper because
+      it quietly learned from results it should not have known yet. The whole evaluation is
+      built as a rolling, walk-forward backtest so that cannot happen.
+    </p>
+
+    <div class="pipeline">
+      <div class="step">
+        <span class="n">1 &middot; TRAIN</span>
+        <h3>Past matches only</h3>
+        <p>The model is fitted on fixtures played strictly before the window being predicted.</p>
+      </div>
+      <div class="step">
+        <span class="n">2 &middot; PREDICT</span>
+        <h3>One 84-hour window</h3>
+        <p>Roughly a matchday of fixtures is scored at once, with no knowledge of any result inside it.</p>
+      </div>
+      <div class="step">
+        <span class="n">3 &middot; SCORE</span>
+        <h3>Against real results and real odds</h3>
+        <p>Both layers run: was the prediction right, and would the bet have paid.</p>
+      </div>
+      <div class="step">
+        <span class="n">4 &middot; ADVANCE</span>
+        <h3>Fold in and refit</h3>
+        <p>The scored window joins the training set, the window moves forward and the model is retrained.</p>
+      </div>
+    </div>
+
+    <p>
+      It is re-sitting an exam every week where you may only study last week&rsquo;s material. Slower
+      than a single train/test split, and the only way the resulting ROI number means anything.
+    </p>
+  </section>
+
+  <section>
+    <div class="eyebrow">Architecture</div>
+    <h2>Sources, features, models, money</h2>
+
+    <figure class="figure">
+      <svg viewBox="0 0 900 384" role="img" aria-label="Architecture: six external sources feed a feature pipeline of scrapers, extractors, imputation, weighting and label construction, which feeds a rolling backtest over three models and three baselines, then a financial layer.">
+        <defs>
+          <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z"/>
+          </marker>
+        </defs>
+        <g>
+          <text class="col" x="20" y="22">SOURCES</text>
+          <text class="col" x="290" y="22">FEATURE PIPELINE</text>
+          <text class="col" x="600" y="22">MODELLING + MONEY</text>
+
+          <rect x="20" y="40" width="210" height="42"/>
+          <text x="34" y="60">API-Football</text>
+          <text class="m" x="34" y="75">fixtures, stats, odds</text>
+
+          <rect x="20" y="92" width="210" height="42"/>
+          <text x="34" y="112">FBref + Understat</text>
+          <text class="m" x="34" y="127">expected goals</text>
+
+          <rect x="20" y="144" width="210" height="42"/>
+          <text x="34" y="164">OddsPortal</text>
+          <text class="m" x="34" y="179">historical odds</text>
+
+          <rect x="20" y="196" width="210" height="42"/>
+          <text x="34" y="216">SoFIFA</text>
+          <text class="m" x="34" y="231">team power ratings</text>
+
+          <rect x="20" y="248" width="210" height="42"/>
+          <text x="34" y="268">Weather + Maps</text>
+          <text class="m" x="34" y="283">match day context</text>
+
+          <rect x="290" y="40" width="250" height="44"/>
+          <text x="304" y="60">scrapers + fixture factory</text>
+          <text class="m" x="304" y="76">Selenium, BeautifulSoup, API</text>
+
+          <rect x="290" y="94" width="250" height="44"/>
+          <text x="304" y="114">feature extractors</text>
+          <text class="m" x="304" y="130">ELO, form, xG, h2h, power</text>
+
+          <rect x="290" y="148" width="250" height="44"/>
+          <text x="304" y="168">imputation</text>
+          <text class="m" x="304" y="184">mean, sentinel, drop</text>
+
+          <rect x="290" y="202" width="250" height="44"/>
+          <text x="304" y="222">sample weighting</text>
+          <text class="m" x="304" y="238">recency 1x to 4x, odds, underdog</text>
+
+          <rect x="290" y="256" width="250" height="44"/>
+          <text x="304" y="276">labels from expected goals</text>
+          <text class="m" x="304" y="292">entropy margin drops coin flips</text>
+
+          <rect class="exe" x="600" y="40" width="280" height="46"/>
+          <text class="ha" x="614" y="60">rolling backtest</text>
+          <text class="m" x="614" y="76">84h window, refit, move forward</text>
+
+          <rect x="600" y="96" width="280" height="42"/>
+          <text x="614" y="116">models</text>
+          <text class="m" x="614" y="131">Keras NN, random forest, XGBoost</text>
+
+          <rect x="600" y="148" width="280" height="42"/>
+          <text x="614" y="168">baselines</text>
+          <text class="m" x="614" y="183">random, historical, always-favourite</text>
+
+          <rect class="mkt" x="600" y="200" width="280" height="46"/>
+          <text class="hb" x="614" y="220">bookmaker decorrelation</text>
+          <text class="m" x="614" y="236">custom loss: disagree, and be right</text>
+
+          <rect x="600" y="256" width="280" height="42"/>
+          <text x="614" y="276">financial layer</text>
+          <text class="m" x="614" y="291">expected profit, Kelly, ROI</text>
+
+          <rect x="600" y="308" width="280" height="42"/>
+          <text x="614" y="328">calibration</text>
+          <text class="m" x="614" y="343">Brier score, not only accuracy</text>
+
+          <g class="flow" marker-end="url(#ar3)">
+            <path d="M230,61 L286,58"/>
+            <path d="M230,113 L286,66"/>
+            <path d="M230,165 L286,74"/>
+            <path d="M230,217 L286,80"/>
+            <path d="M230,269 L286,86"/>
+            <path d="M415,84 L415,90"/>
+            <path d="M415,138 L415,144"/>
+            <path d="M415,192 L415,198"/>
+            <path d="M415,246 L415,252"/>
+            <path d="M540,278 L596,70"/>
+            <path d="M740,86 L740,92"/>
+            <path d="M740,138 L740,144"/>
+            <path d="M740,246 L740,252"/>
+            <path d="M740,298 L740,304"/>
+          </g>
+          <g class="flow">
+            <path class="dash" d="M884,63 L896,63 L896,222 L884,222" marker-end="url(#ar3)"/>
+          </g>
+        </g>
+      </svg>
+      <figcaption>
+        The dashed return path is the walk-forward loop: every scored window is folded back into
+        the training set before the next one is predicted.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="eyebrow">The most interesting idea</div>
+    <h2>A loss function that penalises agreeing with the bookmaker</h2>
+    <p class="lede">
+      A bettor only profits where they disagree with the market and turn out to be right. A model
+      that perfectly reproduces the bookmaker&rsquo;s opinion has, by construction, zero edge: it just
+      pays the margin. So the flagship model does not only optimise for being correct.
+    </p>
+
+    <div class="case">
+      <div class="panel broke">
+        <span class="tag">The trap</span>
+        <p>
+          Train a classifier on football data with the bookmaker&rsquo;s implied probability available
+          anywhere in the feature set, or even just correlated with it, and it converges on the
+          market price. It scores well on accuracy and it is worthless as a betting signal.
+        </p>
+      </div>
+      <div class="panel built">
+        <span class="tag">What I built</span>
+        <p>
+          A custom Keras loss with two terms: ordinary binary cross-entropy for
+          <strong>be correct</strong>, plus a decorrelation penalty for
+          <strong>be different from the bookmaker</strong>. The model is explicitly pushed to
+          find its own signal instead of rediscovering the market price.
+        </p>
+      </div>
+      <div class="panel changed">
+        <span class="tag">Why it is honest</span>
+        <p>
+          Because it is measured against an always-back-the-favourite baseline that <em>is</em>
+          the market. If the decorrelated model cannot beat that, the penalty bought nothing,
+          and the comparison says so instead of hiding it.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Feature engineering</div>
+    <h2>Every column is readable from its name</h2>
+
+    <div class="callout">st_diff_shots_on_goal_ha_ma_g &nbsp;&rarr;&nbsp; short term &middot; home minus away &middot; shots on goal &middot; home/away split &middot; moving average &middot; goals-based</div>
+
+    <div class="limits">
+      <div class="limit"><h3>ELO and form</h3><p>Chess-style strength rating updated after every match, plus recent results and accumulated points.</p></div>
+      <div class="limit"><h3>Expected goals</h3><p>Chance quality rather than luck, taken from two independent providers and averaged over short and long horizons.</p></div>
+      <div class="limit"><h3>Match statistics</h3><p>Moving averages of shots, corners and possession, split by home and away because the split carries real signal.</p></div>
+      <div class="limit"><h3>Head to head</h3><p>History between these two specific teams, which sometimes disagrees with their general form.</p></div>
+      <div class="limit"><h3>Team power</h3><p>Separate defence, midfield and attack ratings derived from published squad ratings.</p></div>
+      <div class="limit"><h3>Context</h3><p>Years in the top league, competition, date, and match-day weather resolved from the stadium location.</p></div>
+    </div>
+
+    <div class="twocol">
+      <p>
+        <strong>Not every historical match deserves equal influence.</strong> Three optional
+        weighting schemes feed the loss function directly: recency scales the weight linearly
+        from 1 for the oldest match to 4 for the newest, because a 2012 fixture is a weaker guide
+        to today than a 2024 one; odds weighting leans on the market&rsquo;s own confidence; and
+        underdog weighting boosts the matches where the favourite lost, which are exactly the
+        ones a profitable model has to get right.
+      </p>
+      <p>
+        <strong>Labels come from expected goals, not only from actual goals.</strong> Expected
+        goals are continuous, so 1.76 to 1.51 is nominally a home win but rounds to a 2-2 draw.
+        An entropy margin keeps those near-ties out of the confident class, so the model is never
+        trained on coin flips presented as certainties. Missing values are handled by an explicit
+        strategy per model family, including a sentinel value that tree models can split on
+        rather than a mean that quietly invents an average team.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Evaluation</div>
+    <h2>Baselines are what make a number a claim</h2>
+    <p class="lede">
+      &ldquo;62 percent accuracy&rdquo; means nothing on its own. &ldquo;62 percent, where random gets 50 and
+      always backing the favourite gets 58&rdquo; is a claim. Three baselines ship alongside the three
+      real models for exactly that reason: a random floor, a naive historical base rate, and the
+      market itself.
+    </p>
+
+    <div class="limits">
+      <div class="limit"><h3>Expected profit</h3><p>For probability p and decimal odds o, the edge per unit staked is p &times; o &minus; 1. A configurable threshold decides how much edge is worth a bet at all.</p></div>
+      <div class="limit"><h3>Bet selection</h3><p>Most confident prediction, highest expected profit, or a majority vote across events followed by highest expected profit.</p></div>
+      <div class="limit"><h3>Stake sizing</h3><p>Flat stakes or the Kelly criterion. Kelly maximises long-run growth and is volatile; flat staking is calmer and makes backtests comparable.</p></div>
+      <div class="limit"><h3>Calibration over accuracy</h3><p>Brier score is reported because expected profit is computed directly from the predicted probability. A model that says 70 percent had better be right 70 percent of the time.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Stack</div>
+    <h2>Python, and a lot of data plumbing</h2>
+
+    <div class="stackgrid">
+      <div class="stackgroup">
+        <h3>Modelling</h3>
+        <div class="chips">
+          <span class="chip hot">TensorFlow / Keras</span><span class="chip">scikit-learn</span>
+          <span class="chip">XGBoost</span><span class="chip">custom loss</span>
+        </div>
+      </div>
+      <div class="stackgroup">
+        <h3>Data</h3>
+        <div class="chips">
+          <span class="chip">pandas</span><span class="chip">NumPy</span>
+          <span class="chip">PyYAML</span><span class="chip">CSV feature store</span>
+        </div>
+      </div>
+      <div class="stackgroup">
+        <h3>Acquisition</h3>
+        <div class="chips">
+          <span class="chip">Selenium</span><span class="chip">BeautifulSoup</span>
+          <span class="chip">requests</span><span class="chip">RapidFuzz</span>
+        </div>
+      </div>
+      <div class="stackgroup">
+        <h3>Output</h3>
+        <div class="chips">
+          <span class="chip">Matplotlib</span><span class="chip">tabulate</span>
+          <span class="chip">pickled runs</span>
+        </div>
+      </div>
+    </div>
+
+    <p>
+      The unglamorous half is name resolution. Seven leagues across five independent sources that
+      share no identifiers and no spelling conventions, so every source carries its own alias
+      table and fuzzy matching fills the gaps. It is the same problem I hit again years later on
+      the arbitrage platform, and it is still the part that decides whether the rest works.
+    </p>
+  </section>
+
+  <section>
+    <div class="eyebrow">Honest limitations</div>
+    <h2>What this project is not</h2>
+    <p>
+      It is a research framework, not a product, and its README says so in a section written for
+      whoever picks it up next. There is no test suite. The dataset is not distributed, only the
+      paths to it. Forecast mode is fully implemented but reachable only by editing a constant.
+      The scrapers depend on markup that four different sites change whenever they feel like it.
+    </p>
+    <p>
+      Documenting that is deliberate. A limitations section costs nothing to write and saves the
+      next person an afternoon, and a project whose weaknesses are unstated is a project nobody
+      can trust the strengths of.
+    </p>
+
+    <p class="note">
+      Academic project, publicly described. No credentials, no dataset and no private endpoints
+      appear here or on any other page of this site.
+    </p>
+  </section>
+
+  <div class="footer">
+    <span>Anonymized engineering documentation</span>
+    <a href="../">Back to portfolio</a>
+    <a href="../buco-arbitrage/">Arbitrage platform</a>
+    <a href="../buco-stock/">Valuation platform</a>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Maros Geffert - Engineering Portfolio</title>
-<meta name="description" content="Backend and platform engineer. Production systems designed, built and operated end to end, alone: real-time trading infrastructure and an auditable equity valuation platform.">
+<meta name="description" content="Backend and platform engineer. Systems designed, built and operated end to end, alone: real-time trading infrastructure, an auditable equity valuation platform and a football forecasting framework.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -78,9 +78,10 @@
       <div class="eyebrow">Projects</div>
       <h2>My projects</h2>
       <p class="intro">
-        Every one of these I specified, designed, implemented and now run alone. The two with a
-        write-up are documented the way I would walk a team through them: the architecture, the
-        hardest problem, and what broke on the way there.
+        Every one of these I specified, designed and implemented myself. The two production
+        systems I also operate: the containers, the deploys, the monitoring and the on-call.
+        Each write-up covers the architecture, the hardest problem, and what broke on the way
+        there.
       </p>
     </div>
 
@@ -127,25 +128,26 @@
         <span class="more">Read the case study &nbsp;&rarr;</span>
       </a>
 
-      <div class="card soon">
-        <span class="ptag">Data pipeline and optimisation</span>
-        <h3>Betslip optimiser</h3>
+      <a class="card" href="buco-forecaster/">
+        <span class="ptag">Machine learning and data pipelines</span>
+        <h3>Football forecasting framework</h3>
         <p>
-          A recommendation-only pipeline that ingests markets from several bookmakers and selects
-          a daily portfolio under explicit risk and budget constraints. It advises, it never acts.
+          Predicts football events from engineered features, then checks whether those
+          predictions would actually have made money against real bookmaker odds.
         </p>
         <ul class="bullets">
-          <li>Strict cross-source matching, because a wrong pairing is worse than no pairing</li>
-          <li>Whole-portfolio search rather than picking each candidate greedily</li>
-          <li>Readiness diagnostics that say why a day produced no recommendation</li>
+          <li>Leak-free rolling backtest: the model never sees a result before predicting it</li>
+          <li>A custom Keras loss that penalises agreeing with the bookmaker</li>
+          <li>Three baselines shipped alongside, so every number is a claim and not a boast</li>
         </ul>
         <div class="chips">
-          <span class="chip">Python</span><span class="chip">TypeScript</span>
-          <span class="chip">React</span><span class="chip">Docker Compose</span>
-          <span class="chip">118 test modules</span>
+          <span class="chip">Python</span><span class="chip">TensorFlow / Keras</span>
+          <span class="chip">XGBoost</span><span class="chip">scikit-learn</span>
+          <span class="chip">Selenium</span><span class="chip">7 leagues</span>
+          <span class="chip hot">university thesis</span>
         </div>
-        <span class="more pending">Write-up in progress</span>
-      </div>
+        <span class="more">Read the case study &nbsp;&rarr;</span>
+      </a>
     </div>
   </section>
 
@@ -261,6 +263,7 @@
     <span>Static HTML on GitHub Pages, no framework and no build step</span>
     <a href="buco-arbitrage/">Arbitrage platform</a>
     <a href="buco-stock/">Valuation platform</a>
+    <a href="buco-forecaster/">Football forecaster</a>
   </div>
 
 </main>
