@@ -388,29 +388,9 @@ a:focus-visible, .card:focus-visible, .chip:focus-visible {
   display: grid;
   grid-template-columns: 150px minmax(0, 1fr);
   gap: 20px;
-  align-items: start;
-  padding: 18px 22px;
+  align-items: center;
+  padding: 14px 22px;
   border-bottom: 1px solid var(--hair);
-}
-.stackrow > .lab { padding-top: 3px; }
-
-/* one technology with a one-line explanation of what it is used for */
-.techs {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
-  gap: 14px 24px;
-}
-.tech { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.tech b {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--ink);
-}
-.tech span {
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--muted);
 }
 .stackrow:last-child { border-bottom: 0; }
 .stackrow > .lab {
