@@ -302,7 +302,6 @@
               <span class="chip hot" data-tip="Application factory with a blueprint per domain, internal only and never exposed to the internet.">Flask 3.1</span>
               <span class="chip" data-tip="The WSGI server Flask runs behind in production.">gunicorn</span>
               <span class="chip" data-tip="Typed models and strict validation on every boundary, including the stored valuation inputs.">Pydantic v2</span>
-              <span class="chip" data-tip="No binary floats anywhere on a hashed path, because that is where lost precision becomes invisible.">Decimal end to end</span>
             </div>
           </div>
           <div class="stackgroup">
@@ -323,7 +322,6 @@
               <span class="chip" data-tip="The driver. Unique and TTL indexes are created at boot rather than by hand.">pymongo</span>
               <span class="chip" data-tip="No broker. A job is a document that survives being consumed, so a failure three days ago is still answerable.">Mongo job queues</span>
               <span class="chip" data-tip="A claimed job carries a deadline the worker renews. A dead worker lets its job lapse back onto the queue.">Leases</span>
-              <span class="chip" data-tip="A TTL lock in Mongo, so the nightly sweep and a manual run cannot collide.">Advisory lock</span>
               <span class="chip" data-tip="Retention and deduplication enforced by the database rather than by application code.">TTL + unique indexes</span>
             </div>
           </div>
@@ -343,16 +341,6 @@
               <span class="chip" data-tip="The only ingress. No container publishes a port to the host at all.">Cloudflare Tunnel</span>
               <span class="chip" data-tip="Identity allowlist and a WAF geoblock in front of the one public hostname.">Zero Trust Access</span>
               <span class="chip" data-tip="The only path to the host. SSH and the database port stay closed to the internet.">WireGuard</span>
-            </div>
-          </div>
-          <div class="stackgroup">
-            <h3>Security and testing</h3>
-            <div class="chips">
-              <span class="chip" data-tip="Broker identifiers encrypted at rest. A missing key raises rather than silently writing plaintext.">Fernet</span>
-              <span class="chip" data-tip="Fernet ciphertexts are salted and useless as a lookup key, so find-or-create uses a keyed hash of the same value.">HMAC-SHA256</span>
-              <span class="chip" data-tip="The backend issues the token, middleware verifies it before a page renders, and the API verifies it again on every call.">NextAuth + JWT</span>
-              <span class="chip hot" data-tip="Clock, HTTP transport and database are injected everywhere, so the suite runs offline.">pytest, 2568 tests</span>
-              <span class="chip" data-tip="Lets the whole suite run without a database and without waiting on a real rate limiter.">In-memory Mongo fake</span>
             </div>
           </div>
         </div>
