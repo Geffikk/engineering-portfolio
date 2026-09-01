@@ -3,257 +3,706 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sample valuation report (anonymized)</title>
+<title>Sample analysis screen &middot; Equity valuation platform</title>
+<meta name="description" content="An anonymized reproduction of the real analysis screen from the equity valuation platform: fair value, verified research, automatic valuation and its full audit bridge.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
   :root {
-    --bg: #f6f7f9;
-    --panel: #ffffff;
-    --line: #e3e6ea;
-    --ink: #14181d;
-    --muted: #667080;
-    --faint: #8a93a1;
-    --accent: #1f6feb;
-    --good: #1a7f52;
-    --warn: #9a6b00;
-    --bad: #b03030;
-    --chip: #eef1f5;
-    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0e1116; --panel: #161b22; --line: #262c36; --ink: #e6edf3;
-      --muted: #9aa5b1; --faint: #6e7781; --accent: #4a8bf5; --good: #3fb950;
-      --warn: #d29922; --bad: #f06060; --chip: #21262d;
-    }
+    --bg: #0a0a0c;
+    --card: #131316;
+    --card-2: #17171b;
+    --raise: #1c1c21;
+    --line: #26262c;
+    --line-soft: #1f1f24;
+    --ink: #f2f2f4;
+    --ink-2: #b9b9c2;
+    --muted: #83838f;
+    --faint: #63636e;
+    --violet: #8b6cff;
+    --violet-dim: #2a2350;
+    --violet-bg: #191634;
+    --green: #34d399;
+    --green-bg: #10281f;
+    --red: #f2555a;
+    --red-bg: #2a1418;
+    --amber: #f0a63c;
+    --sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   }
   * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
   body {
-    margin: 0; padding: 28px 20px 60px;
-    background: var(--bg); color: var(--ink);
-    font: 14px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 1080px; margin: 0 auto; }
-  .banner {
-    border: 1px dashed var(--line); border-radius: 10px; padding: 10px 14px;
-    color: var(--muted); font-size: 12.5px; margin-bottom: 22px; background: var(--panel);
+  .page { max-width: 1180px; margin: 0 auto; padding: 0 24px 80px; }
+
+  /* ---------- anonymization banner ---------- */
+  .notice {
+    margin: 22px 0 26px;
+    padding: 13px 18px;
+    border: 1px dashed var(--line);
+    border-left: 3px solid var(--violet);
+    border-radius: 10px;
+    background: var(--card);
+    font-size: 13.5px;
+    color: var(--ink-2);
   }
-  header.top { display: flex; flex-wrap: wrap; gap: 14px; align-items: baseline; margin-bottom: 6px; }
-  h1 { font-size: 21px; margin: 0; letter-spacing: -0.01em; }
-  .ticker { font-family: var(--mono); color: var(--muted); font-size: 13px; }
-  .sub { color: var(--faint); font-size: 12.5px; margin-bottom: 22px; }
-  .grid { display: grid; gap: 14px; }
-  .cols-4 { grid-template-columns: repeat(4, 1fr); }
-  .cols-2 { grid-template-columns: 1.4fr 1fr; }
-  @media (max-width: 860px) { .cols-4 { grid-template-columns: repeat(2,1fr); } .cols-2 { grid-template-columns: 1fr; } }
-  .card {
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: 12px; padding: 14px 16px;
+  .notice b { color: var(--ink); font-weight: 600; }
+  .notice a { color: var(--violet); }
+
+  /* ---------- page header ---------- */
+  .back {
+    display: inline-flex; align-items: center; gap: 9px;
+    color: var(--ink-2); text-decoration: none; font-size: 14.5px; font-weight: 500;
+    margin-bottom: 26px;
   }
-  .label { font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); margin-bottom: 6px; }
-  .big { font-size: 25px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-  .note { font-size: 12px; color: var(--muted); margin-top: 5px; }
-  .chip {
-    display: inline-block; padding: 2px 8px; border-radius: 999px;
-    background: var(--chip); font-size: 11.5px; color: var(--muted);
-    font-family: var(--mono);
+  .back:hover { color: var(--ink); }
+
+  .tickerhead { display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; }
+  .idblock { display: flex; gap: 16px; align-items: flex-start; }
+  .logo {
+    width: 62px; height: 62px; border-radius: 50%;
+    background: var(--raise); border: 1px solid var(--line);
+    display: grid; place-items: center; flex: none;
+    font-family: var(--mono); font-size: 22px; font-weight: 600; color: var(--violet);
   }
-  .chip.good { color: var(--good); } .chip.warn { color: var(--warn); } .chip.bad { color: var(--bad); }
-  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .07em; color: var(--faint); margin: 30px 0 12px; font-weight: 600; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; font-weight: 500; color: var(--faint); font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; padding: 0 10px 8px 0; }
-  td { padding: 8px 10px 8px 0; border-top: 1px solid var(--line); vertical-align: top; }
-  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); }
-  .ladder { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center; }
-  .rung { display: contents; }
-  .rung > span:first-child { padding: 6px 0; border-top: 1px solid var(--line); }
-  .rung > span:last-child { padding: 6px 0; border-top: 1px solid var(--line); text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
-  .here { color: var(--accent); font-weight: 600; }
-  .bar { height: 6px; border-radius: 3px; background: var(--chip); overflow: hidden; margin-top: 8px; }
-  .bar > i { display: block; height: 100%; background: var(--good); }
-  .mono { font-family: var(--mono); font-size: 12px; word-break: break-all; }
-  .muted { color: var(--muted); }
-  ul.tl { list-style: none; padding: 0; margin: 0; }
-  ul.tl li { border-top: 1px solid var(--line); padding: 9px 0; display: grid; grid-template-columns: 92px 1fr; gap: 12px; font-size: 13px; }
-  ul.tl li span:first-child { font-family: var(--mono); color: var(--faint); font-size: 12px; }
-  footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--faint); font-size: 12px; }
+  .idblock h1 { margin: 0; font-size: 27px; letter-spacing: -0.015em; line-height: 1.15; }
+  .idblock .co { margin: 2px 0 0; color: var(--ink-2); font-size: 15.5px; }
+  .idblock .sector { margin: 8px 0 0; color: var(--faint); font-size: 13.5px; }
+
+  .priceblock { text-align: right; }
+  .priceblock .px { font-size: 30px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .priceblock .fv { margin-top: 4px; font-size: 13.5px; color: var(--muted); }
+  .priceblock .fv b { color: var(--ink); font-weight: 600; }
+  .priceblock .fv .up { color: var(--green); font-weight: 600; margin-left: 10px; }
+  .links { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
+  .lbtn {
+    display: inline-flex; align-items: center; gap: 7px;
+    border: 1px solid var(--line); background: var(--card-2); border-radius: 9px;
+    padding: 7px 12px; font-size: 13px; color: var(--ink-2); text-decoration: none;
+  }
+  .lbtn svg { width: 12px; height: 12px; }
+
+  /* ---------- generic card ---------- */
+  .card { background: var(--card); border: 1px solid var(--line-soft); border-radius: 16px; padding: 22px 24px; margin-bottom: 22px; }
+  .card > h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+  .card > .sub { margin: 5px 0 0; font-size: 13.5px; color: var(--muted); }
+  .cardhead { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: flex-start; }
+
+  .pill { border-radius: 999px; padding: 6px 14px; font-size: 13.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .pill.buy { background: var(--green-bg); color: var(--green); border: 1px solid #1d4d3b; }
+  .pill.down { background: var(--red-bg); color: var(--red); border: 1px solid #4a2026; font-size: 12.5px; padding: 4px 10px; }
+
+  /* ---------- three value cards ---------- */
+  .valgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px; }
+  .val { background: var(--card-2); border: 1px solid var(--line-soft); border-radius: 13px; padding: 17px 19px 19px; }
+  .val.on { background: var(--violet-bg); border-color: #362d6b; }
+  .val .lab { font-family: var(--mono); font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--faint); display: flex; align-items: center; gap: 6px; }
+  .val.on .lab { color: var(--violet); }
+  .val .num { font-family: var(--mono); font-size: 27px; font-weight: 600; margin-top: 9px; letter-spacing: -0.01em; }
+  .val .num span { font-size: 13px; color: var(--muted); font-weight: 400; margin-left: 5px; }
+  .val p { margin: 11px 0 0; font-size: 13px; color: var(--muted); line-height: 1.45; }
+  .val .srcs { display: flex; align-items: center; gap: 7px; margin-top: 12px; font-size: 12px; color: var(--amber); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .dot.g { background: var(--green); } .dot.a { background: var(--amber); }
+  .q { width: 13px; height: 13px; border-radius: 50%; border: 1px solid var(--faint); color: var(--faint); font-size: 9px; display: inline-grid; place-items: center; font-family: var(--sans); }
+  .deeplink { display: inline-block; margin-top: 20px; color: var(--violet); font-size: 13.5px; text-decoration: none; font-weight: 500; }
+
+  /* ---------- charts ---------- */
+  .ranges { display: flex; gap: 4px; flex-wrap: wrap; }
+  .ranges span { font-size: 12.5px; color: var(--muted); padding: 5px 10px; border-radius: 7px; font-weight: 500; }
+  .ranges span.on { background: var(--raise); color: var(--ink); }
+  .chartwrap { overflow-x: auto; margin-top: 18px; }
+  .chartwrap svg { display: block; width: 100%; min-width: 560px; height: auto; }
+  .gridline { stroke: #1e1e23; stroke-width: 1; }
+  .axis { fill: var(--faint); font-family: var(--mono); font-size: 10px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 18px; justify-content: center; margin-top: 14px; font-size: 12.5px; color: var(--ink-2); }
+  .legend i { display: inline-block; width: 16px; height: 2px; margin-right: 7px; vertical-align: middle; }
+
+  /* ---------- fundamentals ---------- */
+  .fund { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 20px; }
+  .fund > div { padding: 0 26px; border-right: 1px solid var(--line-soft); }
+  .fund > div:first-child { padding-left: 0; }
+  .fund > div:last-child { border-right: 0; padding-right: 0; }
+  .fund h3 { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--violet); margin: 0 0 13px; display: flex; align-items: center; gap: 7px; }
+  .frow { display: flex; justify-content: space-between; gap: 14px; padding: 5px 0; font-size: 13.5px; }
+  .frow span { color: var(--ink-2); }
+  .frow b { font-family: var(--mono); font-weight: 500; font-variant-numeric: tabular-nums; }
+  .tiles { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--line-soft); }
+  .tile { background: var(--card-2); border: 1px solid var(--line-soft); border-radius: 11px; padding: 13px 12px; text-align: center; }
+  .tile .k { font-family: var(--mono); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+  .tile .v { font-family: var(--mono); font-size: 17px; font-weight: 600; margin-top: 7px; }
+  .tile .r { font-family: var(--mono); font-size: 9.5px; color: var(--faint); margin-top: 4px; }
+
+  /* ---------- tabs ---------- */
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: var(--card); border: 1px solid var(--line-soft); border-radius: 12px; padding: 6px; margin-bottom: 26px; }
+  .tabs span { text-align: center; padding: 9px; border-radius: 9px; font-size: 14px; font-weight: 500; color: var(--muted); }
+  .tabs span.on { background: var(--raise); color: var(--ink); }
+
+  /* ---------- section heads ---------- */
+  .sechead { margin: 34px 0 6px; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; display: flex; align-items: center; gap: 10px; }
+  .sechead .ic { color: var(--violet); }
+  .secsub { margin: 0 0 18px; font-size: 13.5px; color: var(--muted); }
+  .metarow { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 18px; font-size: 13px; color: var(--muted); }
+  .ghost { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--card-2); border-radius: 9px; padding: 7px 13px; color: var(--ink-2); font-size: 13px; }
+  .ghost.solid { background: var(--raise); color: var(--ink); }
+
+  /* ---------- research provider cards ---------- */
+  .provgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  .prov { background: var(--card); border: 1px solid var(--line-soft); border-radius: 16px; padding: 22px 24px; }
+  .prov .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .prov .name { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 600; }
+  .badge { font-family: var(--mono); font-size: 9.5px; letter-spacing: .09em; color: var(--faint); border: 1px solid var(--line); border-radius: 5px; padding: 3px 7px; }
+  .provnums { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 20px; }
+  .provnums .k { font-family: var(--mono); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+  .provnums .v { font-family: var(--mono); font-size: 22px; font-weight: 600; margin-top: 6px; }
+  .provnums .v.gr { color: var(--green); }
+  .provnums .s { font-family: var(--mono); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); margin-top: 4px; }
+  .bands { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin-top: 8px; }
+  .band { background: var(--card-2); border: 1px solid var(--line-soft); border-radius: 10px; padding: 10px 6px; text-align: center; }
+  .band b { font-family: var(--mono); font-size: 14px; font-weight: 600; display: block; }
+  .band span { font-size: 11px; color: var(--muted); }
+  .provfoot { display: flex; align-items: center; gap: 9px; margin-top: 18px; font-size: 12.5px; color: var(--muted); }
+  .provlinks { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+  .provlinks a { color: var(--violet); font-size: 13.5px; text-decoration: none; font-weight: 500; }
+  .provlinks .pdf { color: var(--muted); font-size: 12.5px; }
+
+  /* ---------- confidence banner ---------- */
+  .conf { background: #12142a; border: 1px solid #2b3160; border-radius: 13px; padding: 15px 20px; display: flex; gap: 13px; align-items: flex-start; margin-bottom: 20px; }
+  .conf .t { font-weight: 600; font-size: 15px; }
+  .conf .m { font-family: var(--mono); font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+
+  /* ---------- headline valuation ---------- */
+  .headline { display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; align-items: center; background: var(--card); border: 1px solid var(--line-soft); border-left: 3px solid var(--violet); border-radius: 14px; padding: 24px 26px; margin-bottom: 18px; }
+  .headline .lab { font-size: 14px; color: var(--ink-2); display: flex; align-items: center; gap: 7px; }
+  .headline .big { font-family: var(--mono); font-size: 38px; font-weight: 600; letter-spacing: -0.02em; margin-top: 6px; }
+  .scen { display: flex; gap: 12px; }
+  .scenbox { background: var(--card-2); border: 1px solid var(--line-soft); border-radius: 12px; padding: 13px 20px; text-align: center; min-width: 116px; }
+  .scenbox.on { background: var(--violet-bg); border-color: #3a3070; }
+  .scenbox .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .scenbox .v { font-family: var(--mono); font-size: 19px; font-weight: 600; margin-top: 5px; }
+
+  .checks { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 20px; }
+  .check { background: var(--card); border: 1px solid var(--line-soft); border-radius: 13px; padding: 16px 17px; }
+  .check .k { font-size: 12.5px; color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+  .check .v { font-family: var(--mono); font-size: 21px; font-weight: 600; margin-top: 9px; }
+  .check .n { font-size: 11.5px; color: var(--faint); margin-top: 8px; line-height: 1.4; }
+
+  /* ---------- bridge ---------- */
+  .bridge { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  .bridge h3 { margin: 0 0 16px; font-size: 16px; font-weight: 600; }
+  .brow { display: flex; justify-content: space-between; gap: 16px; padding: 8px 0; font-size: 13.5px; color: var(--ink-2); }
+  .brow b { font-family: var(--mono); font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .brow.tot { background: var(--violet-bg); border: 1px solid #362d6b; border-radius: 10px; padding: 12px 16px; margin-top: 10px; color: var(--ink); font-weight: 600; }
+  .brow.tot b { color: var(--ink); font-weight: 700; }
+  .bnote { margin: 16px 0 0; font-size: 12px; color: var(--faint); line-height: 1.5; }
+
+  /* ---------- key factors ---------- */
+  .factors { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .factor { background: var(--card); border: 1px solid var(--line-soft); border-radius: 16px; padding: 20px 22px; }
+  .factor h3 { margin: 0 0 14px; font-size: 15.5px; font-weight: 600; display: flex; align-items: center; gap: 9px; }
+  .factor.risk h3 { color: var(--red); }
+  .factor.cat h3 { color: var(--green); }
+  .factor.sum h3 { color: var(--violet); }
+  .factor ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 11px; }
+  .factor li { position: relative; padding-left: 15px; font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+  .factor li::before { content: ""; position: absolute; left: 0; top: 8px; width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .55; }
+  .factor p { margin: 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.55; }
+
+  .foot { margin-top: 44px; padding-top: 20px; border-top: 1px solid var(--line-soft); display: flex; flex-wrap: wrap; gap: 10px 26px; font-size: 13px; color: var(--faint); }
+  .foot a { color: var(--violet); text-decoration: none; }
+
+  @media (max-width: 1000px) {
+    .valgrid, .checks, .factors, .fund { grid-template-columns: 1fr; }
+    .fund > div { border-right: 0; border-bottom: 1px solid var(--line-soft); padding: 0 0 16px; margin-bottom: 16px; }
+    .fund > div:last-child { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
+    .tiles { grid-template-columns: repeat(3, 1fr); }
+    .provgrid, .bridge { grid-template-columns: 1fr; }
+    .checks { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 620px) {
+    .tiles { grid-template-columns: repeat(2, 1fr); }
+    .checks { grid-template-columns: 1fr; }
+    .priceblock { text-align: left; }
+    .links { justify-content: flex-start; }
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="page">
 
-  <div class="banner">
-    <strong>Anonymized sample.</strong> Fictional company, fictional figures,
-    real output shape. Produced to illustrate the report the platform renders
-    without disclosing any position, holding or private data.
+  <div class="notice">
+    <b>Anonymized sample.</b> This is the real analysis screen from the platform, reproduced
+    with a fictional company. Everline Payments does not exist, and the figures are
+    illustrative. No holding, position, credential or private endpoint is shown.
+    <a href="./">Back to the project write-up</a>
   </div>
 
-  <header class="top">
-    <h1>Northwind Logistics, Inc.</h1>
-    <span class="ticker">NWLG &middot; NASDAQ &middot; LEI 5493•••••••••••••••42</span>
-  </header>
-  <div class="sub">
-    Valuation run <span class="mono">run_9f2c14a8</span> &middot; engine v14 &middot;
-    assumption set v2026_08 &middot; computed 2026-08-29 04:41 UTC &middot;
-    trigger <span class="chip">AUTO_FILING</span>
-  </div>
+  <a class="back" href="./">&larr; Back to Stocks</a>
 
-  <div class="grid cols-4">
-    <div class="card">
-      <div class="label">Engine</div>
-      <div class="big">$41.80</div>
-      <div class="note">Filings only. DCF on forward FCFF, WACC 8.9%.</div>
+  <div class="tickerhead">
+    <div class="idblock">
+      <div class="logo">EV</div>
+      <div>
+        <h1>EVPY</h1>
+        <p class="co">Everline Payments, Inc.</p>
+        <p class="sector">Financial Services</p>
+      </div>
     </div>
-    <div class="card">
-      <div class="label">Research</div>
-      <div class="big">$46.25</div>
-      <div class="note">Mean of 2 admitted reports, same currency, same day.</div>
-    </div>
-    <div class="card">
-      <div class="label">Blended</div>
-      <div class="big">$43.14</div>
-      <div class="note">Engine weighted with research at policy weight 0.30.</div>
-    </div>
-    <div class="card">
-      <div class="label">Market</div>
-      <div class="big">$32.60</div>
-      <div class="note">
-        +32.4% to blended &middot; <span class="chip good">BUY</span>
+    <div class="priceblock">
+      <div class="px">$52.28</div>
+      <div class="fv">P50 fair value: <b>$97.57</b><span class="up">&#8599; 53.0%</span></div>
+      <div class="links">
+        <span class="lbtn">Yahoo Finance <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17 17 7M9 7h8v8"/></svg></span>
+        <span class="lbtn">Google Finance <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17 17 7M9 7h8v8"/></svg></span>
       </div>
     </div>
   </div>
 
-  <h2>Price bands</h2>
-  <div class="grid cols-2">
-    <div class="card">
-      <div class="ladder">
-        <div class="rung"><span>Deep value <span class="muted">(50% below fair)</span></span><span>&le; $21.57</span></div>
-        <div class="rung"><span class="here">Value <span class="muted">(25% below fair)</span> &larr; price is here</span><span class="here">&le; $32.36</span></div>
-        <div class="rung"><span>Fair</span><span>&le; $43.14</span></div>
-        <div class="rung"><span>Expensive <span class="muted">(25% above fair)</span></span><span>&gt; $53.93</span></div>
+  <!-- ============ WHAT WE THINK IT IS WORTH ============ -->
+  <div class="card">
+    <div class="cardhead">
+      <div>
+        <h2>What we think it is worth</h2>
+        <p class="sub">per share, in the currency the company reports in</p>
       </div>
-      <div class="note">
-        One forecast at four prices, not four scenarios. The ladder is a
-        versioned assumption, so "Value" means the same thing for every company.
+      <span class="pill buy">Buy&nbsp; +53.0 %</span>
+    </div>
+
+    <div class="valgrid">
+      <div class="val">
+        <div class="lab">Historical / filing-only DCF <span class="q">?</span></div>
+        <div class="num">87.64 <span>USD</span></div>
+        <p>A check model from the last closed statement. It is not the headline value.</p>
+      </div>
+      <div class="val on">
+        <div class="lab">Research &middot; average <span class="q">?</span></div>
+        <div class="num">80.00 <span>USD</span></div>
+        <div class="srcs"><span class="dot g"></span><span class="dot a"></span> 2 of 2 sources have a verified number</div>
+        <p>Average of ChatGPT 80.00 and Claude 80.00. It does not enter the automatic valuation, it stands beside it.</p>
+      </div>
+      <div class="val">
+        <div class="lab">Forward P50 <span class="q">?</span></div>
+        <div class="num">97.57 <span>USD</span></div>
+        <p>The base forward scenario. This is the number the stock list and the upside calculation use; research does not move it.</p>
       </div>
     </div>
-    <div class="card">
-      <div class="label">Scenarios</div>
-      <table>
-        <tr><td>Bear</td><td class="num">$29.10</td></tr>
-        <tr><td>Base</td><td class="num">$41.80</td></tr>
-        <tr><td>Bull</td><td class="num">$58.40</td></tr>
-      </table>
-      <div class="note">Reverse DCF: today's price implies 1.8% terminal growth.</div>
+
+    <a class="deeplink" href="#automatic">Full calculation, run history and events &rarr;</a>
+  </div>
+
+  <!-- ============ PRICE HISTORY ============ -->
+  <div class="card">
+    <div class="cardhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <h2>Price History</h2>
+        <span class="pill down">&#8600; &minus;8.99%</span>
+      </div>
+      <div class="ranges">
+        <span>1D</span><span>5D</span><span class="on">1M</span><span>6M</span>
+        <span>YTD</span><span>1Y</span><span>5Y</span><span>MAX</span>
+      </div>
+    </div>
+
+    <div class="chartwrap">
+      <svg viewBox="0 0 1000 300" role="img" aria-label="One month of daily closing prices, drifting up to about 62 dollars by 26 August and then falling sharply to 52.28 at the end of the month.">
+        <defs>
+          <linearGradient id="pxfill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f2555a" stop-opacity="0.26"/>
+            <stop offset="100%" stop-color="#f2555a" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <g>
+          <line class="gridline" x1="70" y1="30"  x2="985" y2="30"/>
+          <line class="gridline" x1="70" y1="88"  x2="985" y2="88"/>
+          <line class="gridline" x1="70" y1="146" x2="985" y2="146"/>
+          <line class="gridline" x1="70" y1="204" x2="985" y2="204"/>
+          <line class="gridline" x1="70" y1="262" x2="985" y2="262"/>
+          <text class="axis" x="20" y="34">$63</text>
+          <text class="axis" x="20" y="92">$60</text>
+          <text class="axis" x="20" y="150">$57</text>
+          <text class="axis" x="20" y="208">$54</text>
+          <text class="axis" x="20" y="266">$51</text>
+
+          <path fill="url(#pxfill)" d="M70,168 C110,150 130,140 160,142 C195,145 205,152 235,150
+            C265,148 280,112 310,110 C345,108 355,131 390,133 C420,135 435,133 460,130
+            C495,126 505,78 540,72 C575,66 590,88 620,90 C650,92 660,72 690,68
+            C720,64 735,66 765,70 C790,73 800,76 828,78 C852,80 862,82 880,86
+            C900,92 912,150 930,206 C946,252 958,262 985,264 L985,285 L70,285 Z"/>
+          <path fill="none" stroke="#f2555a" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"
+            d="M70,168 C110,150 130,140 160,142 C195,145 205,152 235,150
+            C265,148 280,112 310,110 C345,108 355,131 390,133 C420,135 435,133 460,130
+            C495,126 505,78 540,72 C575,66 590,88 620,90 C650,92 660,72 690,68
+            C720,64 735,66 765,70 C790,73 800,76 828,78 C852,80 862,82 880,86
+            C900,92 912,150 930,206 C946,252 958,262 985,264"/>
+
+          <text class="axis" x="132" y="296">Aug 4</text>
+          <text class="axis" x="232" y="296">Aug 6</text>
+          <text class="axis" x="332" y="296">Aug 10</text>
+          <text class="axis" x="432" y="296">Aug 12</text>
+          <text class="axis" x="532" y="296">Aug 14</text>
+          <text class="axis" x="632" y="296">Aug 18</text>
+          <text class="axis" x="732" y="296">Aug 20</text>
+          <text class="axis" x="832" y="296">Aug 24</text>
+          <text class="axis" x="920" y="296">Aug 26</text>
+        </g>
+      </svg>
     </div>
   </div>
 
-  <h2>Research scoreboard</h2>
+  <!-- ============ KEY FUNDAMENTALS ============ -->
   <div class="card">
-    <table>
-      <thead>
-        <tr>
-          <th>Source</th><th>Retrieved</th><th class="num">Claims</th>
-          <th class="num">Supported</th><th class="num">Fair value</th><th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Provider A</td><td>2026-08-29</td><td class="num">12</td>
-          <td class="num">11</td><td class="num">$47.00</td>
-          <td><span class="chip good">ADMITTED</span></td>
-        </tr>
-        <tr>
-          <td>Provider B</td><td>2026-08-29</td><td class="num">12</td>
-          <td class="num">9</td><td class="num">$45.50</td>
-          <td><span class="chip good">ADMITTED</span></td>
-        </tr>
-        <tr>
-          <td>Provider C</td><td>2026-08-22</td><td class="num">7</td>
-          <td class="num">2</td><td class="num">&mdash;</td>
-          <td><span class="chip bad">REFUSED</span></td>
-        </tr>
-        <tr>
-          <td>Provider D</td><td>2026-08-19</td><td class="num">9</td>
-          <td class="num">6</td><td class="num">&mdash;</td>
-          <td><span class="chip bad">MISATTRIBUTED</span></td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="bar"><i style="width:57%"></i></div>
-    <div class="note">
-      Two of four reports admitted. A refused report stays visible and stays in
-      the divisor: hiding it would leave a scoreboard that only shows what
-      happened to pass. Provider D failed on a single citation whose host was
-      not the publisher it named, which is fatal on its own rather than by
-      degree.
+    <h2>Key fundamentals</h2>
+
+    <div class="fund">
+      <div>
+        <h3>Profitability</h3>
+        <div class="frow"><span>ROIC</span><b>24.4%</b></div>
+        <div class="frow"><span>ROE</span><b>24.5%</b></div>
+        <div class="frow"><span>Gross Margin</span><b>40.5%</b></div>
+        <div class="frow"><span>Operating Margin</span><b>17.0%</b></div>
+        <div class="frow"><span>Profit / Net Margin</span><b>14.4%</b></div>
+      </div>
+      <div>
+        <h3>Leverage</h3>
+        <div class="frow"><span>Net Debt / EBITDA</span><b>0.3x</b></div>
+        <div class="frow"><span>Debt / Equity</span><b>0.7x</b></div>
+        <div class="frow"><span>Current Ratio</span><b>1.3x</b></div>
+        <div class="frow"><span>Interest Coverage</span><b>15.3x</b></div>
+      </div>
+      <div>
+        <h3>Growth</h3>
+        <div class="frow"><span>Revenue Growth (5Y)</span><b>6.4%</b></div>
+        <div class="frow"><span>EPS Growth (5Y)</span><b>37.3%</b></div>
+        <div class="frow"><span>FCF Growth (5Y)</span><b>2.9%</b></div>
+        <div class="frow"><span>Dividend Growth (3Y)</span><b>N/A</b></div>
+      </div>
+    </div>
+
+    <div class="tiles">
+      <div class="tile"><div class="k">Market cap</div><div class="v">45.1B</div></div>
+      <div class="tile"><div class="k">P/E (TTM)</div><div class="v">10.0x</div><div class="r">7.27x &ndash; 14.97x</div></div>
+      <div class="tile"><div class="k">Fwd P/E</div><div class="v">9.1x</div><div class="r">6.64x &ndash; 13.67x</div></div>
+      <div class="tile"><div class="k">Div yield</div><div class="v">1.1%</div></div>
+      <div class="tile"><div class="k">EPS (TTM)</div><div class="v">$5.29</div></div>
+      <div class="tile"><div class="k">Fwd EPS</div><div class="v">$5.80</div></div>
+      <div class="tile"><div class="k">FCF yield</div><div class="v">9.8%</div></div>
     </div>
   </div>
 
-  <h2>Why a claim failed</h2>
-  <div class="card">
-    <table>
-      <thead><tr><th>Claim</th><th>Verdict</th><th>Reason</th></tr></thead>
-      <tbody>
-        <tr>
-          <td>"Operating margin reached 14.2% in FY2025"</td>
-          <td><span class="chip good">SUPPORTED</span></td>
-          <td class="muted">Quote located in archived filing, figure matches, entity matches.</td>
-        </tr>
-        <tr>
-          <td>"Management guided to double-digit growth"</td>
-          <td><span class="chip warn">QUOTE_REJECTED</span></td>
-          <td class="muted">Too generic to check. Different from "we looked and it is not there".</td>
-        </tr>
-        <tr>
-          <td>"Backlog stood at $2.1bn"</td>
-          <td><span class="chip bad">QUOTE_ABSENT</span></td>
-          <td class="muted">Not present in the archived page. Classic invented citation.</td>
-        </tr>
-        <tr>
-          <td>"Fleet utilisation improved to 91%"</td>
-          <td><span class="chip bad">SOURCE_OFF_ENTITY</span></td>
-          <td class="muted">Quote is real, and from a different company's filing.</td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="note">
-      Every cited page is archived before it is checked, because a verdict that
-      depends on a live page stops being a verdict the moment the page is edited.
+  <div class="tabs"><span class="on">Overview</span><span>Financials</span></div>
+
+  <!-- ============ RESEARCH CONTEXT ============ -->
+  <h2 class="sechead">Research context</h2>
+  <p class="secsub">What each source says about the company, and how much of it held up against the citation check.</p>
+
+  <div class="metarow">
+    <span>&#9679; last update 01/09/2026 at 09:10</span>
+    <span class="ghost">&#8593; Upload report</span>
+    <span class="ghost solid">&#9654; Run deep research</span>
+  </div>
+
+  <div class="provgrid">
+    <div class="prov">
+      <div class="top">
+        <div class="name"><span class="dot g"></span> ChatGPT</div>
+        <span class="badge">NO NUMBER</span>
+      </div>
+      <div class="provnums">
+        <div><div class="k">Fair value</div><div class="v">$80.00</div><div class="s">from source</div></div>
+        <div><div class="k">Price target</div><div class="v">$62.00</div><div class="s">analyst target</div></div>
+        <div><div class="k">Upside</div><div class="v gr">+53.0 %</div></div>
+      </div>
+      <div class="k" style="font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-top:20px">Price bands</div>
+      <div class="bands">
+        <div class="band"><b>40</b><span>Deep value</span></div>
+        <div class="band"><b>60</b><span>Undervalued</span></div>
+        <div class="band"><b>80</b><span>Overvalued</span></div>
+        <div class="band"><b>100</b><span>Expensive</span></div>
+      </div>
+      <div class="provfoot"><span class="dot a"></span> 8 of 12 claims verified &nbsp;&middot;&nbsp; report of 1 Sep 2026</div>
+      <div class="provlinks"><a href="#">Read the full analysis &rarr;</a><span class="pdf">&#128196; PDF</span></div>
+    </div>
+
+    <div class="prov">
+      <div class="top">
+        <div class="name"><span class="dot a"></span> Claude</div>
+        <span class="badge">NO NUMBER</span>
+      </div>
+      <div class="provnums">
+        <div><div class="k">Fair value</div><div class="v">$80.00</div><div class="s">from source</div></div>
+        <div><div class="k">Price target</div><div class="v">$70.00</div><div class="s">analyst target</div></div>
+        <div><div class="k">Upside</div><div class="v gr">+53.0 %</div></div>
+      </div>
+      <div class="k" style="font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-top:20px">Price bands</div>
+      <div class="bands">
+        <div class="band"><b>40</b><span>Deep value</span></div>
+        <div class="band"><b>60</b><span>Undervalued</span></div>
+        <div class="band"><b>80</b><span>Overvalued</span></div>
+        <div class="band"><b>100</b><span>Expensive</span></div>
+      </div>
+      <div class="provfoot"><span class="dot a"></span> 1 of 12 claims verified &nbsp;&middot;&nbsp; report of 1 Sep 2026</div>
+      <div class="provlinks"><a href="#">Read the full analysis &rarr;</a></div>
     </div>
   </div>
 
-  <h2>Timeline</h2>
-  <div class="card">
-    <ul class="tl">
-      <li><span>2026-08-29</span><span>Valuation regenerated. Trigger: new annual filing. Value moved $39.10 &rarr; $41.80.</span></li>
-      <li><span>2026-08-29</span><span>Two research reports admitted, one refused.</span></li>
-      <li><span>2026-08-24</span><span>Price crossed from Fair into Value band.</span></li>
-      <li><span>2026-08-11</span><span>Engine upgraded to v14. Prior run re-derived, difference recorded.</span></li>
-      <li><span>2026-07-30</span><span>Fundamentals marked stale: past the filer's own reporting obligation.</span></li>
-    </ul>
-  </div>
+  <!-- ============ AUTOMATIC VALUATION ============ -->
+  <h2 class="sechead" id="automatic"><span class="ic">&#9635;</span> Automatic valuation</h2>
+  <p class="secsub">Forward P50 is the headline value. The historical DCF, EPV and reverse DCF serve as independent checks.</p>
 
-  <h2>Provenance</h2>
-  <div class="card">
-    <table>
-      <tr><td style="width:190px">Input hash</td><td class="mono">sha256:7b41c0d9e2a8f5136ab04c7e91d28f60c5a3be7742d0198fcb6e35a0d4917c2b</td></tr>
-      <tr><td>Primary source</td><td>SEC EDGAR XBRL companyfacts, CIK 000••••••, fetched 2026-08-29 04:39 UTC</td></tr>
-      <tr><td>Price as of</td><td>2026-08-28 close, frozen into the run</td></tr>
-      <tr><td>Risk-free rate</td><td>4.21%, observed, as of 2026-08-28</td></tr>
-      <tr><td>Replay</td><td><span class="chip good">IDENTICAL</span> recomputed from stored inputs, no field differs</td></tr>
-    </table>
-    <div class="note">
-      The run stores the exact digits it was handed, not a tidied copy. Replay
-      can return only three answers: identical, the value moved because the code
-      changed, or the hash no longer matches its payload, which means the record
-      was altered after the fact.
+  <div class="conf">
+    <span style="color:var(--violet)">&#9201;</span>
+    <div>
+      <div class="t">Medium confidence &ndash; use the range, not a single exact number</div>
+      <div class="m">Confidence MEDIUM &middot; score 60/100 &middot; basis FY to 2025-12-31</div>
     </div>
   </div>
 
-  <footer>
-    Fictional data. No holding, position, credential or private endpoint is
-    represented here. Not investment advice.
-  </footer>
+  <div class="headline">
+    <div>
+      <div class="lab">Forward base DCF &middot; P50 <span class="q">?</span></div>
+      <div class="big">$97.57</div>
+    </div>
+    <div class="scen">
+      <div class="scenbox"><div class="k">P10 &middot; bear</div><div class="v">$70.61</div></div>
+      <div class="scenbox on"><div class="k">P50 &middot; base</div><div class="v">$97.57</div></div>
+      <div class="scenbox"><div class="k">P90 &middot; bull</div><div class="v">$137.98</div></div>
+    </div>
+  </div>
+
+  <div class="checks">
+    <div class="check">
+      <div class="k">Historical / filing-only DCF <span class="q">?</span></div>
+      <div class="v">$87.64</div>
+      <div class="n">Check point without forward normalisation</div>
+    </div>
+    <div class="check">
+      <div class="k">EPV floor <span class="q">?</span></div>
+      <div class="v">$61.19</div>
+      <div class="n">Value at zero growth</div>
+    </div>
+    <div class="check">
+      <div class="k">Market-implied growth <span class="q">?</span></div>
+      <div class="v">&minus;4.3 %</div>
+      <div class="n">range &minus;8.8 % to &minus;0.5 %</div>
+    </div>
+    <div class="check">
+      <div class="k">Difference between models <span class="q">?</span></div>
+      <div class="v">10.2 %</div>
+      <div class="n">P50 vs. filing-only DCF &middot; limit 30 %</div>
+    </div>
+    <div class="check">
+      <div class="k">Most sensitive assumption <span class="q">?</span></div>
+      <div class="v">WACC</div>
+      <div class="n">terminal is 74.1 % of EV</div>
+    </div>
+  </div>
+
+  <div class="bridge">
+    <div class="card" style="margin:0">
+      <h3>How the number was built</h3>
+      <div class="brow"><span>Present value of projected FCF <span class="q">?</span></span><b>22.0B</b></div>
+      <div class="brow"><span>Present value of terminal value <span class="q">?</span></span><b>57.9B</b></div>
+      <div class="brow"><span>= Enterprise value <span class="q">?</span></span><b>79.9B</b></div>
+      <div class="brow"><span>&minus; Net debt <span class="q">?</span></span><b>&minus;4.7B</b></div>
+      <div class="brow"><span>= Equity value <span class="q">?</span></span><b>84.8B</b></div>
+      <div class="brow tot"><span>= Value per share</span><b>$87.64</b></div>
+      <p class="bnote">Terminal value is 72.5 % of enterprise value. The higher that number, the more of the result is an assumption about the distant future.</p>
+    </div>
+
+    <div class="card" style="margin:0">
+      <h3>What it was computed from</h3>
+      <div class="brow"><span>WACC <span class="q">?</span></span><b>9.1 %</b></div>
+      <div class="brow"><span>Terminal growth <span class="q">?</span></span><b>2.3 %</b></div>
+      <div class="brow"><span>First-year FCF growth <span class="q">?</span></span><b>6.4 %</b></div>
+      <div class="brow"><span>Projection horizon <span class="q">?</span></span><b>5 years</b></div>
+      <div class="brow"><span>Forward input basis <span class="q">?</span></span><b>FY</b></div>
+      <div class="brow"><span>Most sensitive assumption <span class="q">?</span></span><b>WACC</b></div>
+      <p class="bnote">Assumptions come from the set in force on the day of the run. A manual override would have been flagged on the run.</p>
+    </div>
+  </div>
+
+  <!-- ============ DETAILED BREAKDOWN ============ -->
+  <h2 class="sechead"><span class="ic">&#9635;</span> Detailed breakdown of the historical model</h2>
+  <p class="secsub">FCF history, sensitivities and the full auditable calculation of the check model. The headline P50 and its bridge are above.</p>
+
+  <div class="bridge" style="margin-bottom:22px">
+    <div class="card" style="margin:0">
+      <div class="cardhead">
+        <h2 style="font-size:16px">Fair value and market price</h2>
+        <div class="ranges"><span>1W</span><span>1M</span><span class="on">1Y</span><span>5Y</span></div>
+      </div>
+      <div class="chartwrap">
+        <svg viewBox="0 0 520 300" role="img" aria-label="Three series over three weeks: the engine fair value near 95 dollars, the research fair value moving between 66 and 83, and the market price flat near 57.">
+          <g>
+            <line class="gridline" x1="52" y1="40"  x2="500" y2="40"/>
+            <line class="gridline" x1="52" y1="90"  x2="500" y2="90"/>
+            <line class="gridline" x1="52" y1="140" x2="500" y2="140"/>
+            <line class="gridline" x1="52" y1="190" x2="500" y2="190"/>
+            <line class="gridline" x1="52" y1="240" x2="500" y2="240"/>
+            <text class="axis" x="14" y="44">$99</text>
+            <text class="axis" x="14" y="94">$88</text>
+            <text class="axis" x="14" y="144">$77</text>
+            <text class="axis" x="14" y="194">$66</text>
+            <text class="axis" x="14" y="244">$55</text>
+
+            <!-- engine fair value -->
+            <polyline fill="none" stroke="#8b6cff" stroke-width="2.2" stroke-linejoin="round"
+              points="62,52 100,78 138,78 176,56 214,44 252,44 290,44 328,44 366,44 404,44"/>
+            <g fill="#8b6cff">
+              <circle cx="62" cy="52" r="3.4"/><circle cx="100" cy="78" r="3.4"/><circle cx="138" cy="78" r="3.4"/>
+              <circle cx="176" cy="56" r="3.4"/><circle cx="214" cy="44" r="3.4"/><circle cx="252" cy="44" r="3.4"/>
+              <circle cx="290" cy="44" r="3.4"/><circle cx="328" cy="44" r="3.4"/><circle cx="366" cy="44" r="3.4"/>
+              <circle cx="404" cy="44" r="3.4"/>
+            </g>
+
+            <!-- research fair value -->
+            <polyline fill="none" stroke="#f0a63c" stroke-width="2.2" stroke-dasharray="7 5" stroke-linejoin="round"
+              points="138,118 176,186 214,158 252,132 290,110 328,150 366,124 404,122"/>
+            <g fill="#f0a63c">
+              <circle cx="138" cy="118" r="3.4"/><circle cx="176" cy="186" r="3.4"/><circle cx="214" cy="158" r="3.4"/>
+              <circle cx="252" cy="132" r="3.4"/><circle cx="290" cy="110" r="3.4"/><circle cx="328" cy="150" r="3.4"/>
+              <circle cx="366" cy="124" r="3.4"/><circle cx="404" cy="122" r="3.4"/>
+            </g>
+
+            <!-- market price -->
+            <polyline fill="none" stroke="#e8e8ee" stroke-width="2.2" stroke-linejoin="round"
+              points="62,232 100,232 138,231 176,228 214,224 252,224 290,222 328,222 366,222 404,222"/>
+            <g fill="#e8e8ee">
+              <circle cx="62" cy="232" r="3.2"/><circle cx="100" cy="232" r="3.2"/><circle cx="138" cy="231" r="3.2"/>
+              <circle cx="176" cy="228" r="3.2"/><circle cx="214" cy="224" r="3.2"/><circle cx="252" cy="224" r="3.2"/>
+              <circle cx="290" cy="222" r="3.2"/><circle cx="328" cy="222" r="3.2"/><circle cx="366" cy="222" r="3.2"/>
+              <circle cx="404" cy="222" r="3.2"/>
+            </g>
+
+            <text class="axis" x="52" y="268">9 Aug</text>
+            <text class="axis" x="128" y="268">14 Aug</text>
+            <text class="axis" x="204" y="268">18 Aug</text>
+            <text class="axis" x="280" y="268">19 Aug</text>
+            <text class="axis" x="356" y="268">29 Aug</text>
+            <text class="axis" x="432" y="268">1 Sep</text>
+          </g>
+        </svg>
+      </div>
+      <div class="legend">
+        <span><i style="background:#8b6cff"></i>Fair value &middot; engine</span>
+        <span><i style="background:#f0a63c"></i>Fair value &middot; research</span>
+        <span><i style="background:#e8e8ee"></i>Market price</span>
+      </div>
+    </div>
+
+    <div class="card" style="margin:0">
+      <div class="cardhead">
+        <h2 style="font-size:16px">Financial Metrics</h2>
+        <div class="ranges"><span class="on">Annual</span><span>Quarterly</span></div>
+      </div>
+      <div class="chartwrap">
+        <svg viewBox="0 0 520 300" role="img" aria-label="Revenue and net income bars from 2022 to 2025 with a net margin line rising from about 8 percent to 15.7 percent.">
+          <g>
+            <line class="gridline" x1="60" y1="42"  x2="452" y2="42"  stroke-dasharray="3 4"/>
+            <line class="gridline" x1="60" y1="94"  x2="452" y2="94"  stroke-dasharray="3 4"/>
+            <line class="gridline" x1="60" y1="146" x2="452" y2="146" stroke-dasharray="3 4"/>
+            <line class="gridline" x1="60" y1="198" x2="452" y2="198" stroke-dasharray="3 4"/>
+            <line class="gridline" x1="60" y1="240" x2="452" y2="240"/>
+            <text class="axis" x="8" y="46">$34.0B</text>
+            <text class="axis" x="8" y="98">$25.5B</text>
+            <text class="axis" x="8" y="150">$17.0B</text>
+            <text class="axis" x="8" y="202">$8.5B</text>
+            <text class="axis" x="8" y="244">$0</text>
+            <text class="axis" x="464" y="46">16.0%</text>
+            <text class="axis" x="464" y="98">12.0%</text>
+            <text class="axis" x="464" y="150">8.0%</text>
+            <text class="axis" x="464" y="202">4.0%</text>
+            <text class="axis" x="464" y="244">0.0%</text>
+
+            <g fill="#6d4fe8">
+              <rect x="82"  y="88"  width="30" height="152"/>
+              <rect x="176" y="70"  width="30" height="170"/>
+              <rect x="270" y="56"  width="30" height="184"/>
+              <rect x="364" y="50"  width="30" height="190"/>
+            </g>
+            <g fill="#a48bff">
+              <rect x="116" y="214" width="30" height="26"/>
+              <rect x="210" y="206" width="30" height="34"/>
+              <rect x="304" y="204" width="30" height="36"/>
+              <rect x="398" y="200" width="30" height="40"/>
+            </g>
+
+            <polyline fill="none" stroke="#f0a63c" stroke-width="2.2"
+              points="114,148 208,84 302,102 396,44"/>
+            <g fill="#f0a63c">
+              <circle cx="114" cy="148" r="3.6"/><circle cx="208" cy="84" r="3.6"/>
+              <circle cx="302" cy="102" r="3.6"/><circle cx="396" cy="44" r="3.6"/>
+            </g>
+
+            <text class="axis" x="100" y="262">2022</text>
+            <text class="axis" x="194" y="262">2023</text>
+            <text class="axis" x="288" y="262">2024</text>
+            <text class="axis" x="382" y="262">2025</text>
+          </g>
+        </svg>
+      </div>
+      <div class="legend">
+        <span><i style="background:#6d4fe8;height:9px"></i>Revenue</span>
+        <span><i style="background:#a48bff;height:9px"></i>Net Income</span>
+        <span><i style="background:#f0a63c"></i>Net Margin %</span>
+      </div>
+      <div class="tabs" style="margin:16px 0 0;grid-template-columns:repeat(4,1fr)">
+        <span class="on">Income St.</span><span>Free Cash Flow</span><span>CAPEX</span><span>Debt/Equity</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ KEY FACTORS ============ -->
+  <h2 class="sechead">Key factors</h2>
+  <p class="secsub">Summarised from stored reports. Text, not numbers: none of it enters the valuation.</p>
+
+  <div class="factors">
+    <div class="factor risk">
+      <h3>&#9888; Risks</h3>
+      <ul>
+        <li>Branded checkout may lose relevance to platforms with digital wallets and native payment flows, which would permanently weaken the company's most valuable link between consumers and merchants.</li>
+        <li>Card network or bank rules and rising scheme fees could structurally raise transaction costs and reduce operating income.</li>
+        <li>A serious cybersecurity or fraud failure.</li>
+        <li>Privacy regulation could damage both trust and permissions.</li>
+      </ul>
+    </div>
+    <div class="factor cat">
+      <h3>&#9889; Catalysts</h3>
+      <ul>
+        <li>Q3 2026 results on October 27 may confirm or refute the thesis that branded checkout has stabilised.</li>
+        <li>Management expects roughly $400 million of new gross annual savings, with part of it landing in Q4.</li>
+        <li>Q4 and full-year 2026 results, currently estimated for February 2.</li>
+        <li>2027 guidance should show whether the cost programme is structural or one-off.</li>
+      </ul>
+    </div>
+    <div class="factor sum">
+      <h3>&#9636; Summary</h3>
+      <p>
+        Everline sells digital wallets, branded and unbranded checkout, peer-to-peer payments,
+        buy-now-pay-later, cards, merchant financing, risk management tools and related commercial
+        services. Its customers are consumers and merchants, from small firms to large enterprises,
+        across a global two-sided network. Most revenue comes from transaction fees, with the
+        remainder from currency conversion, instant transfers, credit products, interest on
+        customer balances, subscriptions, referrals and gateway services.
+      </p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>Anonymized reproduction of the product screen. Fictional company, illustrative figures.</span>
+    <a href="./">Project write-up</a>
+    <a href="../">Portfolio</a>
+    <span>Not investment advice.</span>
+  </div>
 
 </div>
 </body>
