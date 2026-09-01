@@ -371,37 +371,46 @@
 
     <div class="twocol">
       <div>
+        <h3>Deploying is a push to main</h3>
         <p>
-          Merging to the main branch is the deployment. The orchestrator watches the repository,
-          pulls the new commit and recreates whatever changed. There is no deploy script and nothing
-          on the server is edited by hand.
+          All twenty-seven services run as Docker containers described by a single compose file,
+          and Portainer on the server keeps that stack in sync with the repository. It polls the
+          <code>main</code> branch every few minutes, and when the branch moves it pulls the new
+          commit, builds the images <em>on the server itself</em> and recreates only the services
+          that changed.
         </p>
         <p>
-          The same compose file is both the build instruction and the deployment, so what was tested
-          is what runs. Passwords and keys live in the orchestrator rather than the repository, and
-          the stack refuses to start when one is missing, so a half-configured deploy fails loudly
-          instead of quietly running degraded. Rolling back is a revert and another poll.
+          So pushing to main is the deploy. There is no CI pipeline and no image registry, and that
+          is a simplicity decision rather than a gap: for a single-operator system on one host, a
+          registry would mean publishing artefacts and managing credentials for them, and a CI
+          service would mean a second place where the build can break. Rolling back is a revert and
+          the next poll, and the commit that is actually live can be read straight off the running
+          container.
         </p>
         <p>
-          The one real cost: a deploy recreates every container, so a trade caught in that window
-          fails. New work therefore stops being accepted before a rollout starts.
+          Credentials live in the orchestrator rather than in the repository, and the stack refuses
+          to start when one is missing, so a half-configured deploy fails loudly instead of quietly
+          running degraded. The one real cost: a rollout recreates every container, so a trade
+          caught in that window would fail. New work therefore stops being accepted before a
+          rollout begins.
         </p>
       </div>
       <div>
+        <h3>Monitoring</h3>
         <p>
-          <strong>Monitoring runs as its own separate stack</strong>, because a monitor that dies
-          together with the thing it monitors is decoration. Server and container metrics, live logs
-          from every container in one place, and error tracking fed by all the services.
+          Monitoring runs as its own separate stack, because a monitor that dies together with the
+          thing it monitors is decoration. Server and container metrics, live logs from every
+          container in one place, and error tracking fed by all the services.
         </p>
         <p>
           On top of that sits a watchdog whose only job is to notice <strong>absence</strong>: that
-          something which should be running is not running at all. Ordinary alerting only reacts to
+          something which should be running is not running at all. Ordinary alerting reacts to
           things that happen, such as a crash, and a cleanly stopped stack produces no event
           whatsoever. So the watchdog works from a written list of what is meant to exist, rather
           than from whatever happens to be running.
         </p>
         <p>
-          Alerts go to chat with quiet periods, so a normal deploy raises nothing, and a daily
+          Alerts go to chat with quiet periods, so an ordinary deploy raises nothing, and a daily
           heartbeat, so that silence itself can be trusted.
         </p>
       </div>
