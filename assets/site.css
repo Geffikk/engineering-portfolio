@@ -787,3 +787,34 @@ figcaption {
   max-width: none;
   margin-top: 2px;
 }
+
+/* ---------- hover explanations ---------- */
+
+[data-tip] { cursor: help; }
+[data-tip]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.tip {
+  position: fixed;
+  z-index: 60;
+  max-width: 280px;
+  padding: 9px 12px;
+  background: var(--surface);
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-btn);
+  color: var(--ink-2);
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.45;
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow: 0 12px 30px -16px rgba(0, 0, 0, .6);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity .12s ease, transform .12s ease;
+}
+.tip[data-open="true"] { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tip { transition: none; }
+}

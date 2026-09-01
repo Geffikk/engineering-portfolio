@@ -8,8 +8,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="../assets/site.css?v=9">
-<script src="../assets/theme.js?v=9"></script>
+<link rel="stylesheet" href="../assets/site.css?v=10">
+<script src="../assets/theme.js?v=10"></script>
+<script src="../assets/tooltip.js?v=10"></script>
 </head>
 <body>
 
@@ -341,49 +342,63 @@
       <div class="stackgroup">
         <h3>Languages</h3>
         <div class="chips">
-          <span class="chip hot">Python 3</span><span class="chip hot">Go</span>
-          <span class="chip hot">TypeScript</span><span class="chip hot">Lua</span>
+          <span class="chip hot" data-tip="Detector, coordinator, executors and every scraper. Fastest to change when the trading logic changes weekly.">Python 3</span>
+          <span class="chip hot" data-tip="The order-book ingest and transform services. Sustained WebSocket fan-in with predictable latency and memory.">Go</span>
+          <span class="chip hot" data-tip="The operator dashboard, over a job schema that keeps changing shape.">TypeScript</span>
+          <span class="chip hot" data-tip="Runs server-side inside Redis, the only place a multi-key check-and-write is atomic.">Lua</span>
         </div>
       </div>
       <div class="stackgroup">
         <h3>Services</h3>
         <div class="chips">
-          <span class="chip">FastAPI</span><span class="chip">Uvicorn</span>
-          <span class="chip">Playwright</span><span class="chip">Chromium / CDP</span>
-          <span class="chip">web3 / eth-account</span><span class="chip">RapidFuzz</span>
+          <span class="chip" data-tip="Internal control APIs and the health endpoint every service exposes.">FastAPI</span>
+          <span class="chip" data-tip="The ASGI server the FastAPI services run on.">Uvicorn</span>
+          <span class="chip" data-tip="Drives the headless browsers that place bets where the venue has no trading API.">Playwright</span>
+          <span class="chip" data-tip="Long-lived browser containers driven over the DevTools Protocol, with VNC for debugging.">Chromium / CDP</span>
+          <span class="chip" data-tip="Fuzzy name matching that pairs the same fixture across venues sharing no identifiers.">RapidFuzz</span>
         </div>
       </div>
       <div class="stackgroup">
         <h3>Data</h3>
         <div class="chips">
-          <span class="chip">Redis 7</span><span class="chip">Redis Streams</span>
-          <span class="chip">Consumer groups</span><span class="chip">Pub/Sub</span>
-          <span class="chip">Server-side Lua</span><span class="chip">MongoDB</span>
+          <span class="chip" data-tip="Two separate instances: rebuildable market state, and a durable execution authority.">Redis 7</span>
+          <span class="chip" data-tip="Carries the order-book pipeline and the handoff from detector to coordinator.">Redis Streams</span>
+          <span class="chip" data-tip="Let a restarted consumer resume from its pending entries instead of losing the window.">Consumer groups</span>
+          <span class="chip" data-tip="Cheap fan-out for market discovery, where a lost message is repaired by the next reconcile.">Pub/Sub</span>
+          <span class="chip" data-tip="The single writer of execution state: admission, fencing and command emission in one atomic step.">Server-side Lua</span>
+          <span class="chip" data-tip="Durable history, fixture mapping, audit trail and the lagging job projection.">MongoDB</span>
         </div>
       </div>
       <div class="stackgroup">
         <h3>Frontend</h3>
         <div class="chips">
-          <span class="chip">Next.js 16</span><span class="chip">React 19</span>
-          <span class="chip">Tailwind 4</span><span class="chip">shadcn</span>
-          <span class="chip">Recharts</span><span class="chip">Auth.js</span>
-          <span class="chip">Vitest</span>
+          <span class="chip" data-tip="App Router and server rendering for the operator dashboard.">Next.js 16</span>
+          <span class="chip" data-tip="Component model behind the fixtures, execution and wallet screens.">React 19</span>
+          <span class="chip" data-tip="Utility styling kept on design tokens rather than ad-hoc values.">Tailwind 4</span>
+          <span class="chip" data-tip="Odds, latency and settlement charts, including the stage waterfall.">Recharts</span>
+          <span class="chip" data-tip="Google OAuth bridged into one session, inside the zero-trust access proxy.">Auth.js</span>
+          <span class="chip" data-tip="The dashboard test suite, 104 files.">Vitest</span>
         </div>
       </div>
       <div class="stackgroup">
         <h3>Infrastructure</h3>
         <div class="chips">
-          <span class="chip">Docker / Podman</span><span class="chip">Portainer GitOps</span>
-          <span class="chip">Cloudflare Tunnel</span><span class="chip">Cloudflare Access</span>
-          <span class="chip">Caddy</span><span class="chip">WireGuard</span>
-          <span class="chip">GitHub Actions</span>
+          <span class="chip" data-tip="Every service is a container. Rootless Podman on the production host.">Docker / Podman</span>
+          <span class="chip" data-tip="Polls the repository and redeploys the stack. A merge to main is the deploy.">Portainer GitOps</span>
+          <span class="chip" data-tip="The only public ingress. Outbound-only, so no port is open and no origin IP is published.">Cloudflare Tunnel</span>
+          <span class="chip" data-tip="Identity allowlist in front of the dashboard, on top of the application login.">Cloudflare Access</span>
+          <span class="chip" data-tip="Reverse proxy on a VPN-only address, with automatic certificates for internal tools.">Caddy</span>
+          <span class="chip" data-tip="The operator path. Every admin tool is reachable over the VPN and nowhere else.">WireGuard</span>
+          <span class="chip" data-tip="CI gates plus scheduled read-only audits against production data.">GitHub Actions</span>
         </div>
       </div>
       <div class="stackgroup">
         <h3>Observability</h3>
         <div class="chips">
-          <span class="chip">Beszel</span><span class="chip">Dozzle</span>
-          <span class="chip">GlitchTip / Sentry SDK</span><span class="chip">Custom watchdog</span>
+          <span class="chip" data-tip="Host and per-container metrics with threshold alerting.">Beszel</span>
+          <span class="chip" data-tip="Live logs for every container in one place, without SSH.">Dozzle</span>
+          <span class="chip" data-tip="Self-hosted, Sentry-compatible error tracking fed by every service.">GlitchTip / Sentry SDK</span>
+          <span class="chip" data-tip="Alerts on absence: something that should be running is not running at all.">Custom watchdog</span>
         </div>
       </div>
     </div>
