@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Equity Valuation Platform</title>
-<meta name="description" content="Anonymized documentation for a self-hosted equity valuation and portfolio platform: what it does, architecture, async work, reproducibility, security, operations and stack.">
+<meta name="description" content="Anonymized documentation for a self-hosted equity valuation and portfolio platform: what it does, architecture, reproducibility, security, operations and stack.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -193,27 +193,6 @@
       <div class="limit"><h3>The browser is a credential</h3><p>CDP has no authentication by design and can read every cookie in the profile, so the debug port is never published and the remote desktop is bound to loopback.</p></div>
       <div class="limit"><h3>No CI runner, no registry</h3><p>The orchestrator polls the repository, builds the images on the target machine and recreates what changed. A deploy is a push, and the live commit is readable from the running container.</p></div>
     </div>
-  </section>
-
-  <section>
-    <div class="eyebrow">Async work</div>
-    <h2>A queue built on leases, not locks</h2>
-
-    <div class="pipeline">
-      <div class="step"><span class="n">1 &middot; ENQUEUE</span><h3>202, not a wait</h3><p>A run takes ten to twenty minutes, so it cannot live inside an HTTP request. The API inserts a QUEUED job and returns its id.</p></div>
-      <div class="step"><span class="n">2 &middot; CLAIM</span><h3>Atomic, no broker</h3><p>A worker claims with a single <code>findOneAndUpdate</code> and receives a lease deadline. No Redis, no Celery, no RabbitMQ.</p></div>
-      <div class="step"><span class="n">3 &middot; RENEW</span><h3>Prove you are alive</h3><p>A live worker renews the lease on every wait pass. Liveness is asserted continuously rather than assumed from a held lock.</p></div>
-      <div class="step"><span class="n">4 &middot; LAPSE</span><h3>Death is survivable</h3><p>A worker that dies lets its lease expire and the job returns to the queue with the attempt count raised. SIGTERM hands the job back immediately.</p></div>
-      <div class="step"><span class="n">5 &middot; SETTLE</span><h3>Two kinds of failure</h3><p>DONE with a result, FAILED with a reason, or ABANDONED after too many attempts. The last is a distinct state so a reader can tell &ldquo;broke once&rdquo; from &ldquo;keeps breaking&rdquo;.</p></div>
-    </div>
-
-    <p>
-      The queue is Mongo documents, deliberately. A job is a document that survives being
-      consumed, which is what makes &ldquo;why did that one fail three days ago&rdquo; answerable. A broker
-      would add a container, a connection, a failure mode and a second place the truth lives, to
-      buy throughput that a few dozen jobs a day will never need. The trade-off is written into
-      the code so the next person can reverse it on evidence rather than taste.
-    </p>
   </section>
 
   <section>
