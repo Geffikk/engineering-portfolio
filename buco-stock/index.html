@@ -8,9 +8,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="../assets/site.css?v=10">
-<script src="../assets/theme.js?v=10"></script>
-<script src="../assets/tooltip.js?v=10"></script>
+<link rel="stylesheet" href="../assets/site.css?v=11">
+<script src="../assets/theme.js?v=11"></script>
+<script src="../assets/tooltip.js?v=11"></script>
 </head>
 <body>
 
@@ -371,50 +371,64 @@
       <div class="stackgroup">
         <h3>Backend</h3>
         <div class="chips">
-          <span class="chip hot">Python 3.12</span><span class="chip hot">Flask 3.1</span>
-          <span class="chip">gunicorn</span><span class="chip">Pydantic v2</span>
-          <span class="chip">Decimal end to end</span>
+          <span class="chip hot" data-tip="The API, the valuation engine and all three workers. One language across the whole backend.">Python 3.12</span>
+          <span class="chip hot" data-tip="Application factory with a blueprint per domain, internal only and never exposed to the internet.">Flask 3.1</span>
+          <span class="chip" data-tip="The WSGI server Flask runs behind in production.">gunicorn</span>
+          <span class="chip" data-tip="Typed models and strict validation on every boundary, including the stored valuation inputs.">Pydantic v2</span>
+          <span class="chip" data-tip="No binary floats anywhere on a hashed path, because that is where lost precision becomes invisible.">Decimal end to end</span>
         </div>
       </div>
       <div class="stackgroup">
         <h3>Frontend</h3>
         <div class="chips">
-          <span class="chip hot">Next.js 16</span><span class="chip hot">React 19</span>
-          <span class="chip">TypeScript</span><span class="chip">Tailwind 4</span>
-          <span class="chip">Radix / shadcn</span><span class="chip">Recharts</span>
+          <span class="chip hot" data-tip="App Router, server rendering, and the proxy layer that keeps the API off the internet.">Next.js 16</span>
+          <span class="chip hot" data-tip="Component model behind the valuation, research and portfolio screens.">React 19</span>
+          <span class="chip" data-tip="Type safety over an API surface that changes with every engine revision.">TypeScript</span>
+          <span class="chip" data-tip="Utility styling kept on design tokens rather than ad-hoc values.">Tailwind 4</span>
+          <span class="chip" data-tip="Accessible primitives for dialogs, menus and tooltips instead of hand-rolled ones.">Radix UI</span>
+          <span class="chip" data-tip="Fair value bands, scenario grids and portfolio charts.">Recharts</span>
         </div>
       </div>
       <div class="stackgroup">
         <h3>Data and async</h3>
         <div class="chips">
-          <span class="chip hot">MongoDB</span><span class="chip">pymongo</span>
-          <span class="chip">Mongo job queues</span><span class="chip">Leases</span>
-          <span class="chip">Advisory lock</span><span class="chip">TTL + unique indexes</span>
+          <span class="chip hot" data-tip="Every document: valuations, research reports, portfolio lots, the audit trail and both job queues.">MongoDB</span>
+          <span class="chip" data-tip="The driver. Unique and TTL indexes are created at boot rather than by hand.">pymongo</span>
+          <span class="chip" data-tip="No broker. A job is a document that survives being consumed, so a failure three days ago is still answerable.">Mongo job queues</span>
+          <span class="chip" data-tip="A claimed job carries a deadline the worker renews. A dead worker lets its job lapse back onto the queue.">Leases</span>
+          <span class="chip" data-tip="A TTL lock in Mongo, so the nightly sweep and a manual run cannot collide.">Advisory lock</span>
+          <span class="chip" data-tip="Retention and deduplication enforced by the database rather than by application code.">TTL + unique indexes</span>
         </div>
       </div>
       <div class="stackgroup">
         <h3>Automation</h3>
         <div class="chips">
-          <span class="chip">Playwright over CDP</span><span class="chip">Long-lived Chrome</span>
-          <span class="chip">Host cron</span>
+          <span class="chip" data-tip="Drives a browser a human signed into once, because the research products have no API that does the same thing.">Playwright over CDP</span>
+          <span class="chip" data-tip="A headful container with a persistent profile. Its debug port is never published, since CDP has no authentication.">Long-lived Chrome</span>
+          <span class="chip" data-tip="Runs the daily refresh sweep as a module inside the running container. No HTTP and no admin token on disk.">Host cron</span>
         </div>
       </div>
       <div class="stackgroup">
         <h3>Infrastructure</h3>
         <div class="chips">
-          <span class="chip">Docker Compose</span><span class="chip">Portainer GitOps</span>
-          <span class="chip">Cloudflare Tunnel</span><span class="chip">Zero Trust Access</span>
-          <span class="chip">WireGuard</span>
+          <span class="chip" data-tip="One stack file, eight services, YAML anchors for the shared worker definition.">Docker Compose</span>
+          <span class="chip" data-tip="Polls the repository, builds the images on the server and recreates what changed.">Portainer GitOps</span>
+          <span class="chip" data-tip="The only ingress. No container publishes a port to the host at all.">Cloudflare Tunnel</span>
+          <span class="chip" data-tip="Identity allowlist and a WAF geoblock in front of the one public hostname.">Zero Trust Access</span>
+          <span class="chip" data-tip="The only path to the host. SSH and the database port stay closed to the internet.">WireGuard</span>
         </div>
       </div>
       <div class="stackgroup">
         <h3>Security and testing</h3>
         <div class="chips">
-          <span class="chip">Fernet</span><span class="chip">HMAC-SHA256</span>
-          <span class="chip">NextAuth + JWT</span><span class="chip hot">pytest, 2568 tests</span>
-          <span class="chip">In-memory Mongo fake</span>
+          <span class="chip" data-tip="Broker identifiers encrypted at rest. A missing key raises rather than silently writing plaintext.">Fernet</span>
+          <span class="chip" data-tip="Fernet ciphertexts are salted and useless as a lookup key, so find-or-create uses a keyed hash of the same value.">HMAC-SHA256</span>
+          <span class="chip" data-tip="The backend issues the token, middleware verifies it before a page renders, and the API verifies it again on every call.">NextAuth + JWT</span>
+          <span class="chip hot" data-tip="Clock, HTTP transport and database are injected everywhere, so the suite runs offline.">pytest, 2568 tests</span>
+          <span class="chip" data-tip="Lets the whole suite run without a database and without waiting on a real rate limiter.">In-memory Mongo fake</span>
         </div>
       </div>
+    </div>
     </div>
 
     <div class="rollout">deliberate non-choices &nbsp;&rarr;&nbsp; no Redis / Celery / RabbitMQ &nbsp;&middot;&nbsp; no LLM vendor API &nbsp;&middot;&nbsp; no Kubernetes &nbsp;&middot;&nbsp; no CI runner &nbsp;&middot;&nbsp; no image registry</div>

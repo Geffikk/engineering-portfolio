@@ -8,9 +8,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="../assets/site.css?v=10">
-<script src="../assets/theme.js?v=10"></script>
-<script src="../assets/tooltip.js?v=10"></script>
+<link rel="stylesheet" href="../assets/site.css?v=11">
+<script src="../assets/theme.js?v=11"></script>
+<script src="../assets/tooltip.js?v=11"></script>
 </head>
 <body>
 
@@ -354,33 +354,47 @@
 
     <div class="stackgrid">
       <div class="stackgroup">
+        <h3>Language</h3>
+        <div class="chips">
+          <span class="chip hot" data-tip="The whole framework: pipelines, feature extraction, models and evaluation.">Python 3.11</span>
+        </div>
+      </div>
+      <div class="stackgroup">
         <h3>Modelling</h3>
         <div class="chips">
-          <span class="chip hot">TensorFlow / Keras</span><span class="chip">scikit-learn</span>
-          <span class="chip">XGBoost</span><span class="chip">custom loss</span>
+          <span class="chip hot" data-tip="The flagship neural network, and the only place a custom loss function is possible.">TensorFlow / Keras</span>
+          <span class="chip" data-tip="The random forest, plus the shared metrics and preprocessing utilities.">scikit-learn</span>
+          <span class="chip" data-tip="The gradient boosting comparison, and the model that handles sentinel imputation best.">XGBoost</span>
+          <span class="chip" data-tip="Cross-entropy plus a penalty for agreeing with the bookmaker, so the model has to find its own signal.">custom loss</span>
         </div>
       </div>
       <div class="stackgroup">
         <h3>Data</h3>
         <div class="chips">
-          <span class="chip">pandas</span><span class="chip">NumPy</span>
-          <span class="chip">PyYAML</span><span class="chip">CSV feature store</span>
+          <span class="chip" data-tip="One row per fixture, merged from every feature set into a single frame.">pandas</span>
+          <span class="chip" data-tip="The numeric layer under the features, the sample weights and the profit calculations.">NumPy</span>
+          <span class="chip" data-tip="Every experiment is a config file, so a run is reproducible from a diff.">PyYAML</span>
+          <span class="chip" data-tip="Pre-generated feature files, so a backtest never re-scrapes what it already has.">CSV feature store</span>
         </div>
       </div>
       <div class="stackgroup">
         <h3>Acquisition</h3>
         <div class="chips">
-          <span class="chip">Selenium</span><span class="chip">BeautifulSoup</span>
-          <span class="chip">requests</span><span class="chip">RapidFuzz</span>
+          <span class="chip" data-tip="Drives a real browser for the sources that render their tables in JavaScript.">Selenium</span>
+          <span class="chip" data-tip="Parses the static pages, where starting a full browser would be wasteful.">BeautifulSoup</span>
+          <span class="chip" data-tip="Plain HTTP for the API sources: fixtures, statistics, odds and weather.">requests</span>
+          <span class="chip" data-tip="Matches team names across five sources that share no identifiers and no spelling conventions.">RapidFuzz</span>
         </div>
       </div>
       <div class="stackgroup">
         <h3>Output</h3>
         <div class="chips">
-          <span class="chip">Matplotlib</span><span class="chip">tabulate</span>
-          <span class="chip">pickled runs</span>
+          <span class="chip" data-tip="Cumulative profit, accuracy and Brier score charts, written straight to PDF.">Matplotlib</span>
+          <span class="chip" data-tip="ROI and accuracy summary tables, printed to the console and saved as text.">tabulate</span>
+          <span class="chip" data-tip="Whole result objects stored, so several experiments can be replotted together later.">pickled runs</span>
         </div>
       </div>
+    </div>
     </div>
 
     <p>
