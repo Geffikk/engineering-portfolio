@@ -48,9 +48,9 @@
     </div>
     <h1>Cross-venue arbitrage platform</h1>
     <p class="standfirst">
-      A self-hosted platform that continuously compares prices for the same sporting fixture
-      across two independent classes of venue, detects two-leg arbitrage, and places both legs
-      automatically under code-enforced risk limits. Running in production with real money.
+      A self-hosted trading system that finds the same sporting event priced differently on two
+      venues and buys both sides at once, so the result of the match stops mattering. It runs
+      unattended, with real money, on my own server.
     </p>
   </header>
 
@@ -63,52 +63,99 @@
   </dl>
 
   <section>
-    <div class="eyebrow">What it does</div>
-    <h2>Same fixture, two venues, opposite outcomes</h2>
-    <p class="lede">
-      The system ingests live prices from sportsbooks and from an on-chain prediction-market
-      exchange, works out which listings refer to the same real-world fixture, prices the
-      two opposite outcomes, and places both legs automatically under hard, code-enforced
-      risk limits.
-    </p>
+    <div class="eyebrow">Overview</div>
+    <h2>The problem, and what I built</h2>
 
-    <div class="pipeline">
-      <div class="step">
-        <span class="n">INGEST</span>
-        <h3>Prices in</h3>
-        <p>WebSocket odds streams, exchange order-book deltas, and headless Chromium for venues with no API.</p>
+    <div class="twocol">
+      <div>
+        <p>
+          Two venues can disagree about the same football or tennis match. A bookmaker offers odds
+          on one team winning, and a prediction-market exchange sells shares that pay out if the
+          other team wins. When those prices disagree far enough, buying both sides costs less than
+          the payout, and it stops mattering who wins.
+        </p>
+        <p>
+          The catch is that the window lasts seconds and only pays if <strong>both</strong>
+          purchases succeed. Doing that by hand is not realistic, and the obvious naive version of
+          it, a script that checks a price and then buys, is exactly how people end up holding one
+          side of a trade they never wanted.
+        </p>
       </div>
-      <div class="step">
-        <span class="n">MAP</span>
-        <h3>Pair the fixture</h3>
-        <p>No shared identifiers, no shared naming. Deterministic fuzzy matching plus a curated alias library.</p>
-      </div>
-      <div class="step">
-        <span class="n">DETECT</span>
-        <h3>Price the edge</h3>
-        <p>Publish when the two opposite outcomes leave a margin above the floor, with a reason recorded when they do not.</p>
-      </div>
-      <div class="step">
-        <span class="n">ADMIT</span>
-        <h3>Score the worst case</h3>
-        <p>Revalidate on fresh prices, score after fees, FX, rounding and slippage, apply budgets and exposure caps.</p>
-      </div>
-      <div class="step">
-        <span class="n">EXECUTE</span>
-        <h3>Place both legs</h3>
-        <p>Browser plus captured authenticated request on one side, fill-or-kill CLOB orders on the other.</p>
-      </div>
-      <div class="step">
-        <span class="n">SETTLE</span>
-        <h3>Prove the outcome</h3>
-        <p>Named terminal state, measured fills only, per-row FX, and an explanation for every gap.</p>
+      <div>
+        <p>
+          So the system does the whole job on its own: it watches both venues continuously, works
+          out which listings describe the same real match, prices the opportunity, decides whether
+          it is worth taking, buys both sides, and then proves what actually happened from what the
+          venues really filled.
+        </p>
+        <p>
+          It has run in production since early 2026 on a single self-hosted Linux server, trading
+          real money inside limits that live in the code rather than in my head. I designed, built
+          and operate all of it, down to the deploy pipeline and the alerting.
+        </p>
       </div>
     </div>
   </section>
 
   <section>
+    <div class="eyebrow">How it works</div>
+    <h2>One opportunity, from price to settlement</h2>
+
+    <p class="lede">
+      Six steps. The first four are free to abandon, the last two are not, and almost every design
+      decision in the project comes from that one difference.
+    </p>
+
+    <div class="pipeline">
+      <div class="step">
+        <span class="n">1 &middot; WATCH</span>
+        <h3>Collect prices</h3>
+        <p>Both venues stream live prices over WebSocket. Where a venue has no usable API at all, a headless browser reads the page instead.</p>
+      </div>
+      <div class="step">
+        <span class="n">2 &middot; MATCH</span>
+        <h3>Pair the event</h3>
+        <p>The venues share no identifiers and spell team names differently, so pairing them is its own problem, solved with fuzzy matching over a hand-curated alias list.</p>
+      </div>
+      <div class="step">
+        <span class="n">3 &middot; PRICE</span>
+        <h3>Find the gap</h3>
+        <p>If the two opposite outcomes together cost less than they pay out, that gap is the profit. Below a minimum gap nothing happens at all.</p>
+      </div>
+      <div class="step">
+        <span class="n">4 &middot; CHECK</span>
+        <h3>Decide whether to take it</h3>
+        <p>Prices are re-read, fees, currency conversion and slippage are subtracted, and the spending limits are applied. Most opportunities die right here.</p>
+      </div>
+      <div class="step">
+        <span class="n">5 &middot; BUY</span>
+        <h3>Place both sides</h3>
+        <p>The bookmaker side goes through an automated browser session, the exchange side through its order book. This is the point of no return.</p>
+      </div>
+      <div class="step">
+        <span class="n">6 &middot; PROVE</span>
+        <h3>Record what happened</h3>
+        <p>Both purchases are reconciled against what the venues actually filled, and the trade closes with a named outcome and a real profit figure.</p>
+      </div>
+    </div>
+
+    <p>
+      Step five is the uncomfortable one. The two venues are unrelated companies, so there is no way
+      to buy both sides as a single transaction and no way to undo one of them. If the first
+      purchase succeeds and the second is rejected, the system is holding a one-sided bet with real
+      money in it, at three in the morning, with nobody watching. Most of what follows on this page
+      exists to make that rare, and survivable when it happens anyway.
+    </p>
+  </section>
+
+  <section>
     <div class="eyebrow">Architecture</div>
-    <h2>State ownership is the whole design</h2>
+    <h2>Twenty-seven containers, four kinds of job</h2>
+
+    <p class="lede">
+      Collect prices, decide, buy, and show the operator what happened. Everything else is a
+      variation on one of those four.
+    </p>
 
     <figure class="figure">
       <svg viewBox="0 0 900 372" role="img" aria-label="Architecture: ingestion services write to Market Redis, the detector feeds the coordinator, which owns Execution Redis as the single execution authority driving two executors.">
@@ -211,132 +258,46 @@
         the routine operation can never become the incident.
       </figcaption>
     </figure>
-  </section>
 
-  <section>
-    <div class="eyebrow">Execution model</div>
-    <h2>How a job is executed safely</h2>
-    <p class="lede">
-      An arbitrage exists only while both legs exist. The two venues are unrelated systems with
-      different latencies and different failure modes, and no transaction spans them. Everything
-      below exists so that a partial failure is survivable, visible and recoverable.
-    </p>
-
-    <div class="limits">
-      <div class="limit">
-        <h3>Single writer</h3>
-        <p>All execution state is written by one Lua script running server-side inside Redis. Admission, budget checks, phase transitions and command emission happen in one atomic operation, so a check-then-act race across processes cannot occur.</p>
+    <div class="twocol">
+      <div>
+        <p>
+          <strong>Collecting</strong> is split by volume. The exchange order book arrives as a
+          firehose of updates, so those services are written in Go, where the latency and memory
+          behaviour are predictable. Everything else, including the browser-driven scrapers, is
+          Python, because that side of the system changes every week.
+        </p>
+        <p>
+          <strong>Deciding</strong> is one service. It re-reads the prices, sizes the trade, applies
+          every limit and orders the two purchases. <strong>Buying</strong> is one service per
+          venue, so a venue having a bad day cannot stall the other one.
+        </p>
       </div>
-      <div class="limit">
-        <h3>Fencing tokens</h3>
-        <p>Every fixture carries a fence, and every claimed resource carries its own. A worker must present the fence it was issued, so a stalled worker that resumes late fails its write instead of overwriting newer state.</p>
-      </div>
-      <div class="limit">
-        <h3>Idempotent triggers</h3>
-        <p>A repeated trigger returns the original job envelope rather than creating a second job, and a duplicate result delivery is recorded and acknowledged without changing authority state.</p>
-      </div>
-      <div class="limit">
-        <h3>Proved emission</h3>
-        <p>&ldquo;A command was decided&rdquo; and &ldquo;a command was emitted&rdquo; are two separate recorded facts, written in the same atomic operation. A scheduled audit asserts that they always agree.</p>
-      </div>
-      <div class="limit">
-        <h3>Pure decision functions</h3>
-        <p>Sizing, worst-case scoring, hedge repricing, flatten sizing and terminal-state classification take no clock, no network and no database. They are deterministic functions of their inputs.</p>
-      </div>
-      <div class="limit">
-        <h3>Frozen replay corpus</h3>
-        <p>A committed corpus pins real end-to-end outcomes down to authority phase, exposure, command lineage and economics. Any change to execution semantics fails CI and names the invariant that moved.</p>
+      <div>
+        <p>
+          <strong>There are two separate databases on purpose.</strong> Live prices go into a store
+          that can be thrown away and rebuilt from the venues at any moment. Anything about money in
+          flight goes into a different, durable store with a replica and backups.
+        </p>
+        <p>
+          Clearing a cache of stale prices is a routine thing to do. Clearing the record of which
+          trades are half-finished is an incident. Keeping them physically apart is what stops the
+          routine action from ever becoming the incident. A third database holds the history, the
+          event pairings and the audit trail, and nothing that decides about money is ever allowed
+          to read from it.
+        </p>
       </div>
     </div>
   </section>
 
   <section>
-    <div class="eyebrow">Job lifecycle</div>
-    <h2>Every job ends in a named state</h2>
-    <p>
-      A job never ends as simply &ldquo;failed&rdquo;. It ends in one of a small set of explicit states, each
-      carrying the evidence that produced it. This vocabulary is what makes the operator screens
-      readable and automated recovery possible.
+    <div class="eyebrow">Technology</div>
+    <h2>What it is built with</h2>
+
+    <p class="intro">
+      Four languages, each doing the thing it is genuinely better at. Hover any item to see what it
+      is used for here.
     </p>
-
-    <div class="tablewrap">
-      <table>
-        <thead><tr><th>Terminal state</th><th>Meaning</th><th>What follows</th></tr></thead>
-        <tbody>
-          <tr>
-            <td class="wrapcell">Completed</td>
-            <td>Both legs filled at or better than the planned prices.</td>
-            <td>Settlement and realized PnL are computed from the measured fills only.</td>
-          </tr>
-          <tr>
-            <td class="wrapcell">Loss mitigated</td>
-            <td>One leg was committed, the hedge was no longer viable, and the position was deliberately closed.</td>
-            <td>Recorded as a known, bounded loss rather than left as an open position.</td>
-          </tr>
-          <tr>
-            <td class="wrapcell">Open exposure</td>
-            <td>One leg filled and the other did not, leaving real directional risk. The naked leg is named.</td>
-            <td>Re-size and rescue run first; anything unresolved is surfaced to the operator and blocks further automation on that fixture.</td>
-          </tr>
-          <tr>
-            <td class="wrapcell">Rejected</td>
-            <td>A named gate refused the job: budget, margin, staleness, depth or duplicate.</td>
-            <td>The reason is counted, so &ldquo;why did nothing happen&rdquo; always has an answer.</td>
-          </tr>
-          <tr>
-            <td class="wrapcell">Unknown outcome</td>
-            <td>A venue response was ambiguous, so the position is treated as possibly open.</td>
-            <td>Reconciliation resolves it against venue records before the job is closed.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <section>
-    <div class="eyebrow">Risk and failure handling</div>
-    <h2>Limits live in code, not in an operator&rsquo;s memory</h2>
-
-    <div class="limits">
-      <div class="limit"><h3>Per-plan and per-fixture budgets</h3><p>One opportunity is capped, and so is total commitment to a single real-world event inside a rolling window.</p></div>
-      <div class="limit"><h3>Worst-case ROI floor</h3><p>After fees, FX, rounding and slippage. A plan must be profitable in its worst case, never merely its expected one.</p></div>
-      <div class="limit"><h3>Never a negative worst case</h3><p>Automatic execution may not knowingly accept a losing worst case. Hard zero.</p></div>
-      <div class="limit"><h3>Depth and staleness gates</h3><p>Top-of-book depth must honour the protected price, and every input has an age ceiling. Stale fails closed.</p></div>
-      <div class="limit"><h3>Pre-submit hedge guard</h3><p>Re-reads the hedge venue immediately before committing the first leg, and refuses if the hedge is no longer buyable.</p></div>
-      <div class="limit"><h3>Layered recovery</h3><p>Re-size, then rescue into a balanced pair, then deliberate flatten, then escalate to a named open-exposure state that blocks further automation.</p></div>
-      <div class="limit"><h3>Bounded retries</h3><p>Venue-driven backoff honouring retry-after hints, idempotent triggers, duplicate-result tolerance, and retry exhaustion as an explicit terminal state.</p></div>
-      <div class="limit"><h3>Per-venue kill switches</h3><p>Every venue has a master enable flag and a paper-or-live submission mode. Paper simulates both legs with zero exposure.</p></div>
-    </div>
-
-    <div class="rollout">rollout pattern for every new enforcement &nbsp;&rarr;&nbsp; off &nbsp;&rarr;&nbsp; shadow (measure what it would have done) &nbsp;&rarr;&nbsp; enforce</div>
-  </section>
-
-  <section>
-    <div class="eyebrow">CI/CD</div>
-    <h2>Continuous delivery over GitOps</h2>
-    <p>
-      Portainer GitOps polls the repository and redeploys the stack. There is no manual deploy
-      script and no hand-edited file on the production host. One compose file is both the build
-      contract and the deployment source, so what CI builds is literally what runs. Secrets live
-      in the orchestrator, and the stack fails fast when one is missing, so a half-configured
-      deploy never starts. Rollback is a revert plus a redeploy.
-    </p>
-    <p>
-      Monitoring runs as its own stack, because a monitor that dies with the thing it monitors is
-      decoration: self-hosted metrics, live logs, Sentry-compatible error tracking, a notifier for
-      crashes and a watchdog for absence. Alerts carry suppression windows so a normal deploy does
-      not page anyone, recovery notices so an alert always ends, and a daily heartbeat.
-    </p>
-    <p>
-      The only public surface is the operator dashboard, behind an identity-allowlisted access
-      proxy and an outbound-only tunnel, with application OAuth inside it. Every internal admin
-      tool is reachable over VPN only.
-    </p>
-  </section>
-
-  <section>
-    <div class="eyebrow">Stack</div>
-    <h2>Chosen per hot path, not per preference</h2>
 
     <div class="stackgrid">
       <div class="stackgroup">
@@ -405,38 +366,151 @@
   </section>
 
   <section>
-    <div class="eyebrow">Quick answers</div>
-    <h2>The questions people actually ask</h2>
+    <div class="eyebrow">Deployment</div>
+    <h2>How it ships and how it is run</h2>
 
-    <div class="tablewrap">
-      <table>
-        <tbody>
-          <tr><td>Live or paper?</td><td>Live, with real money, under automated limits. Paper is a first-class per-venue mode, not an afterthought: one venue lane runs live, a second is fully implemented and deliberately still in paper pending its evidence review.</td></tr>
-          <tr><td>REST or WebSocket?</td><td>Both, by role. WebSocket for live prices (order-book deltas, both odds streams). REST for catalog, discovery, settlement and order placement. Chrome DevTools Protocol for venues with no API.</td></tr>
-          <tr><td>Redis: cache, Pub/Sub or Streams?</td><td>All three, deliberately separated. Streams with consumer groups for restart-safe pipelines, Pub/Sub for cheap fan-out that the next reconcile repairs, keyed live state guarded by Lua, and server-side Lua as the execution authority.</td></tr>
-          <tr><td>Database</td><td>MongoDB for durable history, mapping, audit and projections. Two separate Redis instances: rebuildable market state, and a durable replicated execution authority.</td></tr>
-          <tr><td>Scheduled work</td><td>Per-service internal loops from versioned config, a scheduler sidecar for stack sleep and wake windows, and CI cron for read-only production audits. No external cron on the trading hot path.</td></tr>
-          <tr><td>AI in the loop?</td><td>None. Fixture matching is deterministic fuzzy matching plus a curated alias library, because a trading decision has to be reproducible and auditable.</td></tr>
-        </tbody>
-      </table>
+    <div class="twocol">
+      <div>
+        <p>
+          Merging to the main branch is the deployment. The orchestrator watches the repository,
+          pulls the new commit and recreates whatever changed. There is no deploy script and nothing
+          on the server is edited by hand.
+        </p>
+        <p>
+          The same compose file is both the build instruction and the deployment, so what was tested
+          is what runs. Passwords and keys live in the orchestrator rather than the repository, and
+          the stack refuses to start when one is missing, so a half-configured deploy fails loudly
+          instead of quietly running degraded. Rolling back is a revert and another poll.
+        </p>
+        <p>
+          The one real cost: a deploy recreates every container, so a trade caught in that window
+          fails. New work therefore stops being accepted before a rollout starts.
+        </p>
+      </div>
+      <div>
+        <p>
+          <strong>Monitoring runs as its own separate stack</strong>, because a monitor that dies
+          together with the thing it monitors is decoration. Server and container metrics, live logs
+          from every container in one place, and error tracking fed by all the services.
+        </p>
+        <p>
+          On top of that sits a watchdog whose only job is to notice <strong>absence</strong>: that
+          something which should be running is not running at all. Ordinary alerting only reacts to
+          things that happen, such as a crash, and a cleanly stopped stack produces no event
+          whatsoever. So the watchdog works from a written list of what is meant to exist, rather
+          than from whatever happens to be running.
+        </p>
+        <p>
+          Alerts go to chat with quiet periods, so a normal deploy raises nothing, and a daily
+          heartbeat, so that silence itself can be trusted.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Engineering</div>
+    <h2>Three problems worth describing</h2>
+
+    <div class="case">
+      <div class="panel">
+        <span class="tag">Atomicity</span>
+        <h3>Two processes can both be told the seat is free</h3>
+        <p>
+          Deciding and then acting are two separate moments, and anything can happen in between.
+          Two processes ask the database whether a trade is already running for a match, both are
+          told no, and both start one. The window is a couple of hundred milliseconds, and a restart
+          at the wrong instant is enough to hit it.
+        </p>
+        <p>
+          The fix was to stop asking. The whole decision now runs <strong>inside</strong> the
+          database as a single script that checks and writes without anything interleaving, because
+          that database executes one script at a time. Nobody looks through the window and then
+          walks in; you hand your ticket to the one person allowed to seat anyone, and they handle
+          tickets one at a time.
+        </p>
+      </div>
+      <div class="panel">
+        <span class="tag">Proof</span>
+        <h3>Deciding to send an order is not the same as sending it</h3>
+        <p>
+          An early version recorded that it had hedged a position and then died before the order
+          actually left the process. The database said covered. Reality said exposed. Nothing was
+          lying; the two facts had simply never been written together.
+        </p>
+        <p>
+          Now &ldquo;an order was decided&rdquo; and &ldquo;an order was emitted&rdquo; are two
+          separate recorded facts written in the same atomic step, and a scheduled audit checks that
+          they always agree. The same principle runs through the money: every figure is computed
+          from what the venue actually filled, never from what the system intended to buy.
+        </p>
+      </div>
+      <div class="panel">
+        <span class="tag">Rollout</span>
+        <h3>A new safety rule watches before it acts</h3>
+        <p>
+          A rule that blocks trades and is subtly wrong does not look like a bug. It looks like a
+          quiet week. Nothing turns red, there are simply fewer trades, and by the time anyone
+          wonders why, the evidence is weeks old.
+        </p>
+        <p>
+          So every new rule first runs in a mode where it records what it <em>would</em> have
+          blocked, without blocking anything. After a few days of that, once the numbers make sense
+          against what I expected, it gets permission to act. It is the same reason you would have a
+          new doorman write down who he would have turned away before you let him turn anyone away.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Results</div>
+    <h2>What it produces, and what it refuses to do</h2>
+
+    <div class="twocol">
+      <div>
+        <p>
+          Every trade ends with a name rather than a pass or fail: completed, closed early at a known
+          small loss, one-sided and needing attention, or refused by a specific rule. Each carries
+          the evidence behind it, which is what makes the daily summary readable and recovery
+          automatable.
+        </p>
+        <p>
+          Open exposure has not been engineered away, because it cannot be. A venue can always go
+          down mid-trade. What changed is that every occurrence is detected immediately, names which
+          side is uncovered, and can be attributed afterwards to a venue outage or to my own bug.
+        </p>
+      </div>
+      <div>
+        <p>
+          The refusals are the part I would defend hardest. Automatic trading never knowingly accepts
+          a losing worst case, even when the average looks good, because the average is not what gets
+          paid out. Stale prices stop the trade rather than being used anyway. A great price with
+          almost no volume behind it is not treated as a price. Spending is capped per trade and
+          again per match, so one event cannot absorb everything through repeated attempts.
+        </p>
+        <p>
+          And every venue has an off switch plus a simulated mode that follows exactly the same code
+          path without spending anything, which is how anything new gets proven before it is trusted.
+        </p>
+      </div>
     </div>
 
     <p class="note">
-      Anonymized portfolio documentation. Venue names, credentials, wallet addresses, hostnames,
-      threshold values and strategy parameters are deliberately omitted or generalized. No
-      secrets and no live financial data appear on this page.
+      Anonymized public documentation. Venue names, credentials, wallet addresses, hostnames,
+      threshold values and strategy parameters are deliberately excluded. The source repository is
+      private.
     </p>
   </section>
 
-</div>
-
-<div class="wrap" style="padding-bottom:40px">
   <div class="footer">
-    <span>Anonymized engineering documentation</span>
+    <span>Anonymized project documentation</span>
     <a href="../">Back to portfolio</a>
     <a href="../buco-stock/">Valuation platform</a>
     <a href="../buco-forecaster/">Football forecaster</a>
   </div>
+
+
 </div>
 
 </body>

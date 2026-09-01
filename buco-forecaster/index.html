@@ -44,13 +44,13 @@
       <span>Project documentation</span><span class="sep">/</span>
       <span>University thesis project</span><span class="sep">/</span>
       <span>Solo</span><span class="sep">/</span>
-      <b>Framework, not a product</b>
+      <b>Research framework</b>
     </div>
     <h1>Football event forecasting framework</h1>
     <p class="standfirst">
-      A framework for modelling and predicting football events, and then checking whether those
-      predictions would actually have made money. Two different questions, deliberately kept
-      apart, because a model can be right most of the time and still lose.
+      A framework that predicts what will happen in a football match, and then checks whether
+      betting on those predictions would actually have made money. Two separate questions, kept
+      apart on purpose.
     </p>
   </header>
 
@@ -63,82 +63,98 @@
   </dl>
 
   <section>
-    <div class="eyebrow">What it does</div>
-    <h2>Two questions that are easy to confuse</h2>
+    <div class="eyebrow">Overview</div>
+    <h2>The problem, and what I built</h2>
 
-    <div class="tablewrap">
-      <table>
-        <thead><tr><th>Question</th><th>Who asks it</th><th>How the framework answers</th></tr></thead>
-        <tbody>
-          <tr>
-            <td class="wrapcell">Will both teams score in this match?</td>
-            <td>An analyst</td>
-            <td>A trained classifier returns a calibrated probability.</td>
-          </tr>
-          <tr>
-            <td class="wrapcell">Is betting on that actually profitable?</td>
-            <td>A bettor</td>
-            <td>A financial layer compares that probability against the real bookmaker odds.</td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="twocol">
+      <div>
+        <p>
+          Predicting football results with machine learning is a well-worn exercise, and most of it
+          is worthless for two reasons. The model quietly learns from matches it should not have
+          known about yet, so the reported accuracy is fiction. And even when the accuracy is real,
+          nobody checks whether acting on it would have made or lost money.
+        </p>
+        <p>
+          The second point is the one people skip. If a model says the favourite wins with 80
+          percent confidence and the bookmaker offers odds of 1.10, you are right most of the time,
+          win almost nothing, and the rare losses eat everything. Being accurate and being
+          profitable are simply not the same measurement.
+        </p>
+      </div>
+      <div>
+        <p>
+          So the framework does both, in that order. It gathers years of match data from six
+          sources, engineers a large feature set out of it, trains several models to predict a
+          specific event, and then hands every prediction to a second layer that compares it against
+          the real bookmaker odds of that day and decides whether the bet was worth placing at all.
+        </p>
+        <p>
+          It predicts three kinds of event: over or under a number of goals, whether both teams
+          score, and home win, draw or away win. It runs either as a historical backtest across
+          whole seasons or as a single prediction for one upcoming match. It was built as a
+          university thesis and it is a research framework rather than a product.
+        </p>
+      </div>
     </div>
-
-    <p class="lede">
-      Keeping them apart is the whole point. If a model says the favourite wins with 80 percent
-      confidence and the bookmaker offers 1.10, you win often and win almost nothing, and the
-      rare losses eat everything. Accuracy and profitability are not the same measurement, so
-      the framework always runs both layers, one after the other.
-    </p>
-
-    <p>
-      Supported events: <strong>over / under goals</strong>, <strong>both teams to score</strong>,
-      and <strong>1X2</strong>. It runs in two modes: a backtest over historical seasons, and a
-      single-match forecast against live data.
-    </p>
   </section>
 
   <section>
-    <div class="eyebrow">The core discipline</div>
-    <h2>The model never sees the future</h2>
+    <div class="eyebrow">How it works</div>
+    <h2>From years of matches to one honest number</h2>
+
     <p class="lede">
-      The classic mistake in sports modelling is a model that looks brilliant on paper because
-      it quietly learned from results it should not have known yet. The whole evaluation is
-      built as a rolling, walk-forward backtest so that cannot happen.
+      The whole evaluation is a rolling backtest. The model is retrained over and over as the window
+      moves forward, which is slow, and the only way the resulting profit figure means anything.
     </p>
 
     <div class="pipeline">
       <div class="step">
-        <span class="n">1 &middot; TRAIN</span>
-        <h3>Past matches only</h3>
-        <p>The model is fitted on fixtures played strictly before the window being predicted.</p>
+        <span class="n">1 &middot; GATHER</span>
+        <h3>Six sources into one table</h3>
+        <p>Fixtures, statistics and odds from an API; chance quality, historical odds and squad ratings scraped. The output is one row per match.</p>
       </div>
       <div class="step">
-        <span class="n">2 &middot; PREDICT</span>
-        <h3>One 84-hour window</h3>
-        <p>Roughly a matchday of fixtures is scored at once, with no knowledge of any result inside it.</p>
+        <span class="n">2 &middot; BUILD</span>
+        <h3>Engineer the features</h3>
+        <p>Strength ratings, recent form, chance quality, in-match statistics, head-to-head history, squad power and context such as weather.</p>
       </div>
       <div class="step">
-        <span class="n">3 &middot; SCORE</span>
-        <h3>Against real results and real odds</h3>
-        <p>Both layers run: was the prediction right, and would the bet have paid.</p>
+        <span class="n">3 &middot; TRAIN</span>
+        <h3>On the past only</h3>
+        <p>The model sees matches played strictly before the round it is about to predict. Nothing later exists as far as it is concerned.</p>
       </div>
       <div class="step">
-        <span class="n">4 &middot; ADVANCE</span>
-        <h3>Fold in and refit</h3>
-        <p>The scored window joins the training set, the window moves forward and the model is retrained.</p>
+        <span class="n">4 &middot; PREDICT</span>
+        <h3>One round of fixtures</h3>
+        <p>Roughly a matchday is predicted at once, with no knowledge of any result inside that window.</p>
+      </div>
+      <div class="step">
+        <span class="n">5 &middot; SCORE</span>
+        <h3>Against reality and against the odds</h3>
+        <p>Both layers run: was the prediction right, and would the bet have paid at the real prices of that day.</p>
+      </div>
+      <div class="step">
+        <span class="n">6 &middot; ADVANCE</span>
+        <h3>Move forward and retrain</h3>
+        <p>The scored round joins the training data, the window shifts, and the model is trained again from scratch.</p>
       </div>
     </div>
 
     <p>
-      It is re-sitting an exam every week where you may only study last week&rsquo;s material. Slower
-      than a single train/test split, and the only way the resulting ROI number means anything.
+      It is re-sitting an exam every week where you are only ever allowed to study last week&rsquo;s
+      material. You never accidentally revise tomorrow&rsquo;s answers, which is exactly the mistake
+      that makes so many published sports models look brilliant and behave badly.
     </p>
   </section>
 
   <section>
     <div class="eyebrow">Architecture</div>
     <h2>Sources, features, models, money</h2>
+
+    <p class="lede">
+      Six external sources on the left, the feature pipeline in the middle, the models and the money
+      layer on the right. The dashed line back is the retraining loop.
+    </p>
 
     <figure class="figure">
       <svg viewBox="0 0 900 384" role="img" aria-label="Architecture: six external sources feed a feature pipeline of scrapers, extractors, imputation, weighting and label construction, which feeds a rolling backtest over three models and three baselines, then a financial layer.">
@@ -242,115 +258,35 @@
         the training set before the next one is predicted.
       </figcaption>
     </figure>
-  </section>
-
-  <section>
-    <div class="eyebrow">Models</div>
-    <h2>Six predictors, three of them baselines</h2>
-
-    <div class="tablewrap">
-      <table>
-        <thead><tr><th>Model</th><th>Implementation</th><th>Role</th></tr></thead>
-        <tbody>
-          <tr><td>Neural network</td><td>Keras sequential, LeakyReLU, dropout, L2, sigmoid output</td><td>The flagship model, and the only one carrying the decorrelation loss.</td></tr>
-          <tr><td>Random forest</td><td>scikit-learn, optional hyperparameter tuning</td><td>Tree comparison against the network on the same features.</td></tr>
-          <tr><td>Gradient boosting</td><td>XGBoost, optional hyperparameter tuning</td><td>Second tree comparison, and the one that handles sentinel imputation best.</td></tr>
-          <tr><td>Historical</td><td>Custom</td><td>Baseline: predicts from historical base rates.</td></tr>
-          <tr><td>Random</td><td>Custom</td><td>Baseline: the sanity floor. Anything below it is noise.</td></tr>
-          <tr><td>Always favourite</td><td>Custom</td><td>Baseline: backs the shortest price, so it represents the market itself.</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <p>
-      The baselines are what make the results readable. Accuracy on its own is not a claim; the
-      same number stated next to a random floor and next to the market is.
-    </p>
-  </section>
-
-  <section>
-    <div class="eyebrow">Bookmaker decorrelation</div>
-    <h2>The model is trained to disagree, and be right</h2>
-    <p class="lede">
-      A bettor only profits where they disagree with the market and turn out to be right. A model
-      that reproduces the bookmaker&rsquo;s opinion has, by construction, zero edge: it just pays the
-      margin. The flagship model therefore does not only optimise for being correct.
-    </p>
-
-    <div class="limits">
-      <div class="limit">
-        <h3>Two loss terms</h3>
-        <p>Ordinary binary cross-entropy for being correct, plus a penalty that grows as the prediction correlates with the bookmaker&rsquo;s implied probability.</p>
-      </div>
-      <div class="limit">
-        <h3>Enabled per configuration</h3>
-        <p>It is a switch on the neural network, not a hard-wired behaviour, so a run with and without it is a controlled comparison rather than two different projects.</p>
-      </div>
-      <div class="limit">
-        <h3>Measured against the market</h3>
-        <p>The always-favourite baseline is the market. If the decorrelated model cannot beat it, the penalty bought nothing, and the comparison says so.</p>
-      </div>
-      <div class="limit">
-        <h3>Odds excluded by default</h3>
-        <p>Bookmaker implied probabilities exist as features but are switched off in the default feature set, so the model is not simply handed the answer it is meant to differ from.</p>
-      </div>
-    </div>
-  </section>
-
-  <section>
-    <div class="eyebrow">Feature engineering</div>
-    <h2>Every column is readable from its name</h2>
-
-    <div class="callout">st_diff_shots_on_goal_ha_ma_g &nbsp;&rarr;&nbsp; short term &middot; home minus away &middot; shots on goal &middot; home/away split &middot; moving average &middot; goals-based</div>
-
-    <div class="limits">
-      <div class="limit"><h3>ELO and form</h3><p>Chess-style strength rating updated after every match, plus recent results and accumulated points.</p></div>
-      <div class="limit"><h3>Expected goals</h3><p>Chance quality rather than luck, taken from two independent providers and averaged over short and long horizons.</p></div>
-      <div class="limit"><h3>Match statistics</h3><p>Moving averages of shots, corners and possession, split by home and away because the split carries real signal.</p></div>
-      <div class="limit"><h3>Head to head</h3><p>History between these two specific teams, which sometimes disagrees with their general form.</p></div>
-      <div class="limit"><h3>Team power</h3><p>Separate defence, midfield and attack ratings derived from published squad ratings.</p></div>
-      <div class="limit"><h3>Context</h3><p>Years in the top league, competition, date, and match-day weather resolved from the stadium location.</p></div>
-    </div>
 
     <div class="twocol">
-      <p>
-        <strong>Not every historical match deserves equal influence.</strong> Three optional
-        weighting schemes feed the loss function directly: recency scales the weight linearly
-        from 1 for the oldest match to 4 for the newest, because a 2012 fixture is a weaker guide
-        to today than a 2024 one; odds weighting leans on the market&rsquo;s own confidence; and
-        underdog weighting boosts the matches where the favourite lost, which are exactly the
-        ones a profitable model has to get right.
-      </p>
-      <p>
-        <strong>Labels come from expected goals, not only from actual goals.</strong> Expected
-        goals are continuous, so 1.76 to 1.51 is nominally a home win but rounds to a 2-2 draw.
-        An entropy margin keeps those near-ties out of the confident class, so the model is never
-        trained on coin flips presented as certainties. Missing values are handled by an explicit
-        strategy per model family, including a sentinel value that tree models can split on
-        rather than a mean that quietly invents an average team.
-      </p>
+      <div>
+        <p>
+          <strong>The unglamorous half is getting the data to line up.</strong> Seven leagues across
+          five independent sources, none of which share an identifier and none of which spell team
+          names the same way. Every source carries its own alias table and fuzzy matching covers the
+          rest. It is the same problem I ran into years later on the arbitrage platform, and it is
+          still the part that decides whether everything above it works.
+        </p>
+      </div>
+      <div>
+        <p>
+          <strong>Everything else is configuration.</strong> Which models, which features, how
+          matches are weighted, what counts as enough edge to bet, how much to stake: all of it lives
+          in a config file, so any experiment can be reproduced from a diff rather than from memory.
+          That is what makes it a framework instead of a script.
+        </p>
+      </div>
     </div>
   </section>
 
   <section>
-    <div class="eyebrow">Evaluation</div>
-    <h2>From a probability to a bet</h2>
-    <p class="lede">
-      A probability is not yet a decision. The financial layer turns the model output into a bet
-      or into nothing at all, and it is the second of the two questions the framework keeps apart.
+    <div class="eyebrow">Technology</div>
+    <h2>What it is built with</h2>
+
+    <p class="intro">
+      Hover any item to see what it is used for here.
     </p>
-
-    <div class="limits">
-      <div class="limit"><h3>Expected profit</h3><p>For probability p and decimal odds o, the edge per unit staked is p &times; o &minus; 1. A configurable threshold decides how much edge is worth a bet at all.</p></div>
-      <div class="limit"><h3>Bet selection</h3><p>Most confident prediction, highest expected profit, or a majority vote across events followed by highest expected profit.</p></div>
-      <div class="limit"><h3>Stake sizing</h3><p>Flat stakes or the Kelly criterion. Kelly maximises long-run growth and is volatile; flat staking is calmer and makes backtests comparable.</p></div>
-      <div class="limit"><h3>Calibration over accuracy</h3><p>Brier score is reported because expected profit is computed directly from the predicted probability. A model that says 70 percent had better be right 70 percent of the time.</p></div>
-    </div>
-  </section>
-
-  <section>
-    <div class="eyebrow">Stack</div>
-    <h2>Python, and a lot of data plumbing</h2>
 
     <div class="stackgrid">
       <div class="stackgroup">
@@ -395,43 +331,97 @@
         </div>
       </div>
     </div>
-    </div>
-
-    <p>
-      The unglamorous half is name resolution. Seven leagues across five independent sources that
-      share no identifiers and no spelling conventions, so every source carries its own alias
-      table and fuzzy matching fills the gaps. It is the same problem I hit again years later on
-      the arbitrage platform, and it is still the part that decides whether the rest works.
-    </p>
   </section>
 
   <section>
-    <div class="eyebrow">Honest limitations</div>
-    <h2>What this project is not</h2>
-    <p>
-      It is a research framework, not a product, and its README says so in a section written for
-      whoever picks it up next. There is no test suite. The dataset is not distributed, only the
-      paths to it. Forecast mode is fully implemented but reachable only by editing a constant.
-      The scrapers depend on markup that four different sites change whenever they feel like it.
-    </p>
-    <p>
-      Documenting that is deliberate. A limitations section costs nothing to write and saves the
-      next person an afternoon, and a project whose weaknesses are unstated is a project nobody
-      can trust the strengths of.
-    </p>
+    <div class="eyebrow">Engineering</div>
+    <h2>Two ideas worth explaining</h2>
+
+    <div class="case">
+      <div class="panel">
+        <span class="tag">The main idea</span>
+        <h3>A model trained to disagree with the bookmaker</h3>
+        <p>
+          You only make money where you disagree with the market and turn out to be right. A model
+          that reproduces the bookmaker&rsquo;s opinion has no edge at all by construction: it just
+          pays the margin. And that is exactly what a model trained on football data tends to
+          converge on, because the bookmaker is already very good.
+        </p>
+        <p>
+          So the main model is trained on two goals at once. The usual one, be correct, plus a
+          penalty that grows the closer its prediction sits to the market price. It is a custom loss
+          function, and it pushes the model to find its own signal instead of rediscovering the odds.
+          Whether it worked is measured against a baseline that <em>is</em> the market, so the
+          comparison cannot flatter itself.
+        </p>
+      </div>
+      <div class="panel">
+        <span class="tag">Labelling</span>
+        <h3>Football scores lie, so the labels come from chances</h3>
+        <p>
+          A team can dominate a match and lose 1-0. Training on the scoreline teaches the model that
+          the better performance was the worse one, which is noise dressed up as signal. Labels are
+          therefore built from expected goals, which measure the quality of chances created rather
+          than whether they went in.
+        </p>
+        <p>
+          That introduces a second problem: expected goals are continuous, so a match at 1.76 to 1.51
+          rounds to a home win while really being a coin flip. A margin keeps those near-ties out of
+          the confident class entirely, so the model is never trained on coin flips presented as
+          certainties.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Results</div>
+    <h2>What it produces, and what it is not</h2>
+
+    <div class="twocol">
+      <div>
+        <p>
+          The output is a cumulative profit curve per league and per configuration, accuracy and
+          calibration tables, and stored result objects so several experiments can be replotted on
+          one chart. Calibration matters more than accuracy here, because the profit is computed
+          straight from the predicted probability: a model that says 70 percent had better be right
+          about 70 percent of the time.
+        </p>
+        <p>
+          Three baselines run alongside every experiment: random guessing, the historical base rate,
+          and always backing the favourite. &ldquo;62 percent accuracy&rdquo; means nothing on its
+          own. &ldquo;62 percent, where random gets 50 and the market gets 58&rdquo; is a claim.
+        </p>
+      </div>
+      <div>
+        <p>
+          <strong>What it is not.</strong> It is a research framework, not a product, and the
+          repository says so in a section written for whoever picks it up next. There is no test
+          suite. The dataset is not distributed, only the paths to it. Live forecast mode is fully
+          implemented but reachable only by editing a constant. The scrapers depend on markup that
+          four different websites change whenever they feel like it.
+        </p>
+        <p>
+          Writing that down was deliberate. A limitations section costs nothing and saves the next
+          person an afternoon, and a project whose weaknesses are unstated is one whose strengths
+          cannot be trusted either.
+        </p>
+      </div>
+    </div>
 
     <p class="note">
       Academic project, publicly described. No credentials, no dataset and no private endpoints
-      appear here or on any other page of this site.
+      appear here or anywhere else on this site.
     </p>
   </section>
 
   <div class="footer">
-    <span>Anonymized engineering documentation</span>
+    <span>Anonymized project documentation</span>
     <a href="../">Back to portfolio</a>
     <a href="../buco-arbitrage/">Arbitrage platform</a>
     <a href="../buco-stock/">Valuation platform</a>
   </div>
+
 
 </div>
 
