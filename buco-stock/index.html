@@ -362,36 +362,35 @@
 
     <div class="twocol">
       <div>
-        <h3>Deploying is a push</h3>
+        <h3>Deploying is a push to main</h3>
         <p>
-          There is no build pipeline and no image registry. The container manager on the server
-          watches the repository, and when the main branch moves it builds the images on the machine
-          itself and restarts whatever changed. Pushing to main <em>is</em> the deploy, rolling back
-          is a revert, and the exact commit that is live can be read off the running container.
+          Everything runs as Docker containers described by a single compose file, and Portainer
+          on the server keeps that stack in sync with the repository. It polls the
+          <code>main</code> branch every few minutes, and when the branch moves it pulls the new
+          commit, builds the images <em>on the server itself</em> and recreates only the services
+          that changed.
         </p>
+        <p>
+          So pushing to main is the deploy. There is no CI pipeline and no image registry, and
+          that is a simplicity decision rather than a gap: for a single-tenant tool on one host,
+          a registry would mean publishing artefacts and managing credentials for them, and a CI
+          service would mean a second place where the build can break. Rolling back is a revert
+          and the next poll, and the commit that is actually live can be read straight off the
+          running container.
+        </p>
+      </div>
+      <div>
         <h3>Scheduled work</h3>
         <p>
           The nightly refresh runs from the server&rsquo;s own scheduler, executing a module inside
           the already-running container. Deliberately not an HTTP endpoint, because that would mean
-          storing a permanent admin password in a file on disk. It prints a summary of what it
-          examined and what it changed, and exits with an error code if anything failed.
+          storing a permanent admin password in a file on disk.
         </p>
-      </div>
-      <div>
-        <h3>Watching it</h3>
         <p>
-          Container health checks and automatic restarts, the container manager&rsquo;s own view,
-          the nightly job&rsquo;s exit code and log, and a log viewer built into the admin area with
-          a request id on every line, so a problem I hit in the browser can be traced without
-          opening a shell. There is no metrics stack and no alerting: for a single-user internal
-          tool that is a cost decision, and it is the first thing I would add if it were handling
-          anyone else&rsquo;s money.
-        </p>
-        <h3>Working on it</h3>
-        <p>
-          A second compose file brings the whole stack up locally with its own database and live
-          code reloading, with the browser automation switched off and a much smaller base image.
-          No production secrets and no VPN needed to develop.
+          It asks one question of every company being tracked: has anything changed that would make
+          yesterday&rsquo;s answer wrong. It prints a summary of what it examined and what it
+          recomputed, and exits with an error code if any company failed, so a scheduler watching
+          exit codes notices without anyone reading the log.
         </p>
       </div>
     </div>
@@ -479,9 +478,9 @@
           shows the real shape of it.
         </p>
         <p>
-          The engine is covered by 2,568 tests. The clock, the network and the database are all
-          swappable, so the entire suite runs offline in seconds and never waits on a real service.
-          Bug fixes ship with the failing test first.
+          The clock, the network and the database are all swappable, so the test suite runs
+          offline in seconds and never waits on a real service. Bug fixes ship with the failing
+          test first.
         </p>
       </div>
       <div>
